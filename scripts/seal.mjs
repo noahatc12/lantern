@@ -55,9 +55,25 @@ async function prompt(question) {
 }
 
 async function getPassphrase() {
+  // A local, gitignored file. This exists so the passphrase can stay entirely
+  // on this machine while still letting an automated run seal the bundle: the
+  // value is read straight into the KDF and is never printed, logged, echoed
+  // back, or committed. Nothing downstream of here ever renders it.
+  const LOCAL = path.resolve('.passphrase.local');
+  if (existsSync(LOCAL)) {
+    const fromFile = (await readFile(LOCAL, 'utf8')).trim();
+    if (fromFile.length >= 12) {
+      console.log('using .passphrase.local (value never displayed)');
+      return fromFile;
+    }
+    console.error('.passphrase.local exists but is under 12 characters. Ignoring it.');
+  }
   if (process.env.LANTERN_PASSPHRASE) return process.env.LANTERN_PASSPHRASE;
   if (!process.stdin.isTTY) {
-    console.error('No passphrase. Set LANTERN_PASSPHRASE, or run this in a terminal to be asked.');
+    console.error('No passphrase found.');
+    console.error('Easiest fix, one time only:');
+    console.error("  write your passphrase into .passphrase.local (gitignored)");
+    console.error('Or:');
     console.error("  PowerShell:  $env:LANTERN_PASSPHRASE='your phrase'; npm run seal");
     console.error("  bash:        LANTERN_PASSPHRASE='your phrase' npm run seal");
     process.exit(1);

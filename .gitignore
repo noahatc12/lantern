@@ -33,3 +33,6 @@ docs/
 
 # Content lint vocabulary is itself content.
 lint-rules.local.json
+
+# Local passphrase file. Never committed, never printed.
+.passphrase.local
