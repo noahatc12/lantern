@@ -3,126 +3,177 @@ import type { EngineId } from '../types';
 /**
  * How to play, per engine.
  *
- * Deliberately keyed by ENGINE rather than by deck. Two reasons:
+ * Keyed by ENGINE rather than by deck, for two reasons: this file ships in a
+ * public repo, so engine-level mechanics reveal nothing while per-deck rules
+ * would; and rules living in code rather than deck data means editing them
+ * never requires resealing the content bundle.
  *
- *  1. This file ships in a public repo. Engine-level instructions are generic
- *     and reveal nothing; per-deck rules would leak what the decks are.
- *  2. Rules living in code rather than in deck data means editing them never
- *     requires resealing the content bundle.
- *
- * Each deck still supplies its own one-line blurb from the sealed bundle, so a
- * player sees generic mechanics plus that deck's specific framing.
+ * The division of labour: these rules explain the MECHANIC. The deck's own
+ * prompt, which comes from the sealed bundle, supplies the SUBJECT. Every
+ * engine whose rules depend on a subject says so explicitly, so a player is
+ * never left guessing what a blank field wants.
  */
 
 export interface Rules {
-  /** One line on what this is. */
   summary: string;
-  /** Numbered steps, in play order. */
   steps: string[];
-  /** The things that make it work, or ruin it. */
+  /** A worked example. Concrete beats abstract, especially for authored games. */
+  example?: { label: string; lines: string[] };
   notes: string[];
 }
 
 export const RULES: Record<EngineId, Rules> = {
   draw: {
-    summary: 'Take turns. Pick your poison, do the thing, hand the phone over.',
+    summary: 'Take turns. Pick a category, do what the card says, hand the phone over.',
     steps: [
       'The screen names whose turn it is.',
-      'That person picks a category, and the app draws a card.',
-      'Answer it or do it.',
-      'Tap Done to pass. Tap Skip to get a different card instead.',
+      'That person picks a category, and the app draws one card.',
+      'Answer it out loud, or do it.',
+      'Tap Done to pass the phone. Tap Skip if you want a different card instead.',
     ],
+    example: {
+      label: 'A round looks like',
+      lines: [
+        'Screen says: Noah. Noah taps truth.',
+        'Card: "What was the first thing you noticed about me?"',
+        'Noah answers, taps Done, hands the phone to Lily.',
+      ],
+    },
     notes: [
-      'Skipping is free. It costs no turn, no points, and the other person is never told you skipped.',
-      'The deck warms up on its own. Early cards stay easy and it climbs as you play, so opening at the ceiling is not possible.',
-      'No card repeats until the whole deck has been through.',
+      'Skipping is free. It does not use your turn, and the other person is never told you skipped.',
+      'The deck warms up on its own: early cards are easy and it climbs as you play, so it cannot open at full intensity.',
+      'No card repeats until the whole deck has been through once.',
     ],
   },
 
   match: {
     summary: 'Sort the deck alone. Only what you BOTH said yes to comes back.',
     steps: [
-      'One of you takes the phone somewhere private and sorts every card No, Maybe or Yes.',
-      'The screen goes blank. Hand the phone over.',
-      'The other person sorts the same deck, without seeing the first answers.',
+      'One of you takes the phone to another room and sorts every card No, Maybe or Yes.',
+      'The screen goes blank. Hand the phone over without looking.',
+      'The other person sorts the same deck, seeing none of the first answers.',
       'The app shows what you both wanted, and nothing else.',
     ],
+    example: {
+      label: 'How the reveal works',
+      lines: [
+        'You said Yes, they said Yes  ->  shown under Both yes',
+        'You said Yes, they said Maybe  ->  shown under Worth talking about',
+        'You said Yes, they said No  ->  never shown, to either of you',
+      ],
+    },
     notes: [
-      'Anything either of you said No to is never shown to anyone, and is never written to the phone. It stops existing the moment the match runs.',
-      'That is the whole point: you can say yes to something without risking that it lands badly, because a solo yes is never revealed.',
-      'Take it to another room. Sorting with the other person watching defeats it.',
+      'Anything either of you said No to is never displayed and never written to the phone. It stops existing the moment the match runs.',
+      'That is the whole point. You can say yes to something without risking that it lands badly, because a solo yes is never revealed.',
+      'Sort it alone. Doing this with the other person watching defeats the entire mechanic.',
     ],
   },
 
   predict: {
-    summary: 'Write three. One is true. See if they can pick it.',
+    summary:
+      'Write three statements about yourself. Two are true but boring. One is the real answer to the prompt. They guess which.',
     steps: [
-      'One of you writes three statements privately and marks which one is real.',
-      'The screen goes blank. Hand the phone over.',
-      'The other person guesses which is the real one.',
-      'The real one is revealed. Ask one follow-up question about it, then swap.',
+      'Read the prompt. It tells you what the real one should be about, and it stays on screen while you write.',
+      'Write three lines. Two should be true and unremarkable. One is your real answer to the prompt.',
+      'Tap mark on the real one. The mark is never shown to the other person.',
+      'The screen goes blank. Hand the phone over. They guess which line is the real answer.',
+      'The real one is revealed. Ask one follow-up question about it, then swap and they write.',
     ],
+    example: {
+      label: 'A worked example',
+      lines: [
+        'Say the prompt asked for something you have never told them.',
+        '1. I once ate cereal for dinner four nights running.',
+        '2. I still know every word of a song I pretend to hate.',
+        '3. [the real answer, whatever the prompt is actually asking for]',
+        'Then you would mark line 3.',
+      ],
+    },
     notes: [
-      'Make the real one something you actually mean. A joke answer makes the round do nothing.',
-      'The guess is not the point. The follow-up question is.',
-      'Nothing you write is saved anywhere.',
+      'The two decoys should be true and dull. If they are obviously filler, the real one stands out and the game does nothing.',
+      'Put the real one in a different position each round or they will learn your pattern.',
+      'Make the real one something you actually mean. A joke answer wastes the round.',
+      'The guess is not the point. The follow-up question is. Nothing you write is saved anywhere.',
     ],
   },
 
   timer: {
-    summary: 'A clock and a changing instruction. Do not stop early.',
+    summary: 'A clock and an instruction that changes as it runs. Do not stop early.',
     steps: [
-      'Put the phone down where you can both see it.',
-      'Start the timer.',
-      'Follow the instruction on screen. It changes as the clock runs.',
-      'Stop when the timer does, not before.',
+      'Put the phone somewhere you can both see it.',
+      'Start the clock.',
+      'Do what the instruction on screen says.',
+      'The instruction changes on its own as time passes. Follow the new one.',
+      'Stop when the clock does, not before.',
     ],
+    example: {
+      label: 'A five minute run',
+      lines: [
+        '0:00  start slow, slower than feels natural',
+        '1:00  hands stay where they are',
+        '2:00  stop completely for fifteen seconds',
+        'and so on until the clock ends',
+      ],
+    },
     notes: [
-      'Running the clock out is the mechanic. Ending early is the thing this is designed to prevent.',
-      'It will feel much longer than it is. That is expected, and the last minute is where anything happens.',
+      'Running the clock out is the mechanic. Ending early is the exact thing this is built to prevent, which is why there is no pause.',
+      'It will feel much longer than it is. That is expected, and the last minute is where anything actually happens.',
     ],
   },
 
   ladder: {
-    summary: 'Rungs that escalate. Both of you opt in to each one. Either can stop.',
+    summary:
+      'Rungs that escalate one step at a time. Both of you opt in before each one. Either of you can stop the whole thing.',
     steps: [
-      'Each rung asks both of you to opt in before it is shown.',
-      'Both tap in, and the rung appears.',
-      'Do it, then move to the next rung.',
-      'Anyone can tap Enough at any point, and the game ends there.',
+      'Each rung asks both of you to tap in before it is revealed.',
+      'One person tapping in is not enough. Nothing shows until both have.',
+      'The rung appears. Do it.',
+      'Tap Next rung to continue, or Enough to end the game there.',
     ],
+    example: {
+      label: 'The rungs climb',
+      lines: [
+        'Rung 1 is trivial and low stakes.',
+        'Each rung after asks for a little more than the last.',
+        'The final rung is the real one.',
+      ],
+    },
     notes: [
       'Stopping is not losing. The end screen shows how far you got and nothing else.',
-      'The app never records who ended it. Not on screen, not in storage.',
-      'Consent here is not one decision at the start. It is a fresh one at every rung.',
+      'The app never records who ended it. Not on screen, not in storage, ever.',
+      'Consent here is not one decision at the start. It is a fresh one at every single rung.',
     ],
   },
 
-  // Engines specced but not yet built. Listed so the map stays exhaustive and
-  // adding one is a compile error until its rules are written.
+  // Specced but not yet built. Listed so the map stays exhaustive and adding an
+  // engine is a compile error until its instructions are written.
   compare: {
-    summary: 'Both answer privately, then both answers are shown side by side.',
-    steps: ['Answer privately.', 'Hand the phone over.', 'They answer.', 'Both answers appear.'],
-    notes: ['Nothing is scored. The gaps between the answers are the interesting part.'],
+    summary: 'You both answer the same question privately, then both answers appear together.',
+    steps: [
+      'Answer the question privately.',
+      'Hand the phone over. They answer the same question.',
+      'Both answers are shown side by side.',
+    ],
+    notes: ['Nothing is scored. Where the answers differ is the interesting part.'],
   },
   scale: {
-    summary: 'Both rate the same thing. The app shows the gap first.',
-    steps: ['Rate it privately.', 'Hand over.', 'They rate it.', 'The gap is revealed.'],
-    notes: ['A big gap is worth a sentence each. That is the whole game.'],
+    summary: 'You both rate the same thing. The app shows the gap before the numbers.',
+    steps: ['Rate it privately.', 'Hand over. They rate it.', 'The gap is revealed, then the numbers.'],
+    notes: ['A gap of four or more is worth one sentence each. That is the whole game.'],
   },
   builder: {
-    summary: 'The app assembles a prompt from parts. Reroll anything that does not fit.',
-    steps: ['Roll.', 'Either of you can veto or reroll a part.', 'Do what it says.'],
+    summary: 'The app assembles a prompt out of parts. Reroll anything that does not fit.',
+    steps: ['Roll.', 'Either of you can veto or reroll any part.', 'Do what it says.'],
     notes: ['A few dozen parts make hundreds of combinations, so it rarely repeats.'],
   },
   vault: {
-    summary: 'Write a promise now. Redeem it whenever you like.',
-    steps: ['Write what is owed.', 'It sits in the vault.', 'Redeem it any time.'],
-    notes: ['A phone remembers an IOU three weeks later, which is why paper coupon books fail.'],
+    summary: 'Write a promise now. Redeem it whenever you want.',
+    steps: ['Write what is owed and by whom.', 'It sits in the vault.', 'Redeem it any time.'],
+    notes: ['A phone remembers an IOU three weeks later, which is exactly why paper coupon books fail.'],
   },
   endurance: {
-    summary: 'Whoever reacts first loses. Restraint is the game.',
-    steps: ['Take turns.', 'Stay within the drawn constraint.', 'First to ask for more loses.'],
+    summary: 'Whoever reacts first loses. Restraint is the whole game.',
+    steps: ['Take turns within the drawn constraint.', 'First one to ask for more loses.'],
     notes: ['Losing is fine. The winner decides what happens next.'],
   },
 };

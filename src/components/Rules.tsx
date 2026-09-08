@@ -41,6 +41,17 @@ export default function Rules({ deck, onStart, onExit, children, startLabel }: P
           ))}
         </ol>
 
+        {rules.example && (
+          <>
+            <h2 className="rules__head">{rules.example.label}</h2>
+            <div className="rules__example">
+              {rules.example.lines.map((l) => (
+                <p key={l}>{l}</p>
+              ))}
+            </div>
+          </>
+        )}
+
         <h2 className="rules__head">Worth knowing</h2>
         <ul className="rules__notes">
           {rules.notes.map((n) => (

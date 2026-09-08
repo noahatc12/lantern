@@ -117,7 +117,13 @@ async function main() {
     await open(title);
     const steps = await page.locator('.rules__steps li').count();
     const notes = await page.locator('.rules__notes li').count();
-    check(`${title}: has instructions`, steps >= 3 && notes >= 2, `${steps} steps, ${notes} notes`);
+    const summary = await txt(page, '.rules__summary');
+    const hasExample = (await page.locator('.rules__example p').count()) > 0;
+    check(
+      `${title}: has instructions`,
+      steps >= 3 && notes >= 2 && summary.length > 20 && hasExample,
+      `${steps} steps, ${notes} notes, example=${hasExample}`,
+    );
     await snap(page, `rules-${title.toLowerCase().replace(/[^a-z]+/g, '-')}`);
     await home();
   }
@@ -226,8 +232,17 @@ async function main() {
   const writer1 = await txt(page, '.play__eyebrow');
   await snap(page, 'predict-prompt');
 
+  const promptText = await txt(page, '.card');
   await page.locator('.play__stage .btn--primary').click();
   await page.waitForSelector('.slot__input');
+  const stillVisible = (await page.locator('.reminder__text').count()) > 0
+    ? await txt(page, '.reminder__text')
+    : '';
+  check(
+    'the prompt stays visible while writing',
+    stillVisible === promptText,
+    `prompt "${promptText.slice(0, 30)}" vs reminder "${stillVisible.slice(0, 30)}"`,
+  );
   const slots = page.locator('.slot__input');
   const nSlots = await slots.count();
   for (let i = 0; i < nSlots; i++) await slots.nth(i).fill(`statement ${i + 1}`);

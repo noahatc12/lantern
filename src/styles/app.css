@@ -732,3 +732,47 @@ input {
 .result .btn {
   margin-top: 14px;
 }
+
+/* Worked example inside a rules screen. */
+.rules__example {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.rules__example p {
+  margin: 0 0 6px;
+  color: var(--ink-dim);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.rules__example p:last-child {
+  margin-bottom: 0;
+}
+
+/* Keeps the prompt visible while you are answering it. */
+.reminder {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  background: var(--panel);
+  text-align: left;
+}
+
+.reminder__label {
+  margin: 0 0 4px;
+  color: var(--ink-dim);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reminder__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}

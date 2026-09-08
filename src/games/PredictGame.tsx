@@ -107,13 +107,20 @@ export default function PredictGame({ deck, names, maxTier, onExit }: Props) {
           <span className="play__deck">{names[writer]}, privately</span>
         </header>
         <section className="play__stage play__stage--form">
+          <div className="reminder">
+            <p className="reminder__label">writing about</p>
+            <p className="reminder__text">{prompt.text}</p>
+          </div>
+          <p className="play__note">
+            Two lines true but unremarkable. One line the real answer. Mark the real one.
+          </p>
           {phase.slots.map((s, i) => (
             <label key={i} className="slot">
               <span className="slot__n">{i + 1}</span>
               <input
                 className="slot__input"
                 value={s}
-                placeholder="write something"
+                placeholder={i === slotCount - 1 ? 'and another' : 'something about you'}
                 onChange={(e) => {
                   const slots = [...phase.slots];
                   slots[i] = e.target.value;
