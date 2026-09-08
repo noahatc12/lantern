@@ -27,10 +27,12 @@ function fail(msg) {
   process.exit(1);
 }
 
-// 1. Content rules first. Sealing bad content just makes it harder to find.
-console.log('\n[1/5] checking content...');
-if (run('npm', ['run', '--silent', 'lint:decks']).status !== 0) {
-  fail('Content lint failed. Nothing was sealed or pushed.');
+// 1. The FULL gate, before anything leaves this machine. The browser half of
+// the suite cannot run in CI (it needs the passphrase), so this is the gate
+// that actually protects the deployed app.
+console.log('\n[1/5] running the full gate...');
+if (run('npm', ['run', '--silent', 'verify']).status !== 0) {
+  fail('Verification failed. Nothing was sealed or pushed.');
 }
 
 // 2. Seal. Prompts for the passphrase; never reads it from anywhere persistent.
