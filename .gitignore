@@ -1,0 +1,35 @@
+node_modules/
+dist/
+.vite/
+*.local
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# Plaintext decks NEVER get committed. Only sealed ciphertext ships.
+# `npm run seal` turns decks/*.json into decks/*.enc.
+decks/*.json
+!decks/*.example.json
+
+# Anything personal stays on the device or on this machine. Broad on purpose:
+# a missed entry here means private content committed to a remote, permanently.
+answers/
+exports/
+*.answers.json
+*.session.json
+*.private.*
+
+# Test + harness output
+shots/
+test-results/
+playwright-report/
+
+# TS incremental build state
+*.tsbuildinfo
+
+# Planning docs stay local. This repo is public; they are not.
+docs/
+
+# Content lint vocabulary is itself content.
+lint-rules.local.json

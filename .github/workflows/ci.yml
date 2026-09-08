@@ -1,0 +1,50 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Near-vacuous here by design: decks/*.json is gitignored, so CI normally
+      # sees no plaintext. Its job in CI is to catch plaintext committed by
+      # mistake. The real gate is the pre-push hook, where the plaintext lives.
+      - name: Deck lint
+        run: npm run lint:decks
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Layout assertions
+        run: |
+          npx vite preview --port 4173 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:4173/lantern/ >/dev/null && break
+            sleep 1
+          done
+          npm run shots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots
+          path: shots/
+          retention-days: 7

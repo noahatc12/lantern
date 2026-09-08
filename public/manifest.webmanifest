@@ -1,0 +1,19 @@
+{
+  "name": "Lantern",
+  "short_name": "Lantern",
+  "description": "",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0e13",
+  "theme_color": "#0f0e13",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
