@@ -1,5 +1,5 @@
 import type { Card, Deck, SessionConfig, SessionState, Tier } from '../types';
-import { read, write } from './storage';
+import { isStringArray, read, write } from './storage';
 
 /**
  * Draw logic.
@@ -136,7 +136,7 @@ export function startSession(config: SessionConfig): SessionState {
     // ladder position is derived from progress; the ceiling is set by the
     // players and only ever lowered, by yellow.
     effectiveTier: config.maxTier,
-    drawn: read<string[]>(`seen.${config.deckId}`, []),
+    drawn: read<string[]>(`seen.${config.deckId}`, [], isStringArray),
     drawCount: 0,
     turn: 'a',
     light: 'green',

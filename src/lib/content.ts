@@ -1,6 +1,6 @@
 import { exportKey, importKey, deriveKey, fromB64, unsealWithKey } from './crypto';
 import type { SealedPayload } from './crypto';
-import { read, write, remove } from './storage';
+import { isNullableString, read, write, remove } from './storage';
 import type { Deck } from '../types';
 
 /**
@@ -37,7 +37,7 @@ async function fetchPayload(): Promise<SealedPayload | null> {
 
 /** Tries the cached key. Returns null if there is none or it no longer works. */
 export async function tryCached(): Promise<Bundle | null> {
-  const cached = read<string | null>(KEY_CACHE, null);
+  const cached = read<string | null>(KEY_CACHE, null, isNullableString);
   if (!cached) return null;
   const payload = await fetchPayload();
   if (!payload) return null;

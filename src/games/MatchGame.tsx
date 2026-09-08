@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Card, Deck } from '../types';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
-import { read, write } from '../lib/storage';
+import { isMatchResult, read, write } from '../lib/storage';
 import { useScreenTop } from '../lib/useScreenTop';
 
 /**
@@ -42,7 +42,7 @@ type Phase =
 export default function MatchGame({ deck, names, onExit }: Props) {
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });
   const [firstAnswers, setFirstAnswers] = useState<Answers | null>(null);
-  const saved = read<Saved | null>(`match.${deck.id}`, null);
+  const saved = read<Saved | null>(`match.${deck.id}`, null, isMatchResult);
 
   const byId = (ids: string[]) =>
     ids.map((id) => deck.cards.find((c) => c.id === id)).filter((c): c is Card => Boolean(c));

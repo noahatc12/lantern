@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { installSafeAreaVars } from './lib/safeArea';
 import { hasContent, tryCached } from './lib/content';
 import type { Bundle } from './lib/content';
-import { read, write } from './lib/storage';
+import { isNames, isTier, read, write } from './lib/storage';
+import { useUpdateAvailable } from './lib/useUpdateAvailable';
 import type { Deck, Tier } from './types';
 import Unlock from './screens/Unlock';
 import Home from './screens/Home';
@@ -27,11 +28,33 @@ type Screen =
   | { at: 'home' }
   | { at: 'game'; deck: Deck };
 
+/**
+ * App wraps the screen body so the update banner can sit above every screen
+ * without threading it through each of the many early returns below.
+ */
 export default function App() {
+  const updateReady = useUpdateAvailable();
+  return (
+    <>
+      {updateReady && <UpdateBanner />}
+      <AppBody />
+    </>
+  );
+}
+
+function UpdateBanner() {
+  return (
+    <button className="updatebar" onClick={() => window.location.reload()}>
+      A newer version is ready. Tap to reload.
+    </button>
+  );
+}
+
+function AppBody() {
   const [screen, setScreen] = useState<Screen>({ at: 'boot' });
   const [bundle, setBundle] = useState<Bundle | null>(null);
-  const [names, setNames] = useState<Names>(() => read<Names>('names', ['', '']));
-  const [maxTier, setMaxTier] = useState<Tier>(() => read<Tier>('maxTier', 2));
+  const [names, setNames] = useState<Names>(() => read<Names>('names', ['', ''], isNames));
+  const [maxTier, setMaxTier] = useState<Tier>(() => read<Tier>('maxTier', 2, isTier));
 
   useEffect(() => {
     installSafeAreaVars();

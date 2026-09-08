@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Deck } from '../types';
 import Rules from '../components/Rules';
-import { read, write } from '../lib/storage';
+import { isVaultItems, read, write } from '../lib/storage';
 import { useScreenTop } from '../lib/useScreenTop';
 
 /**
@@ -39,7 +39,7 @@ const KEY = 'vault.items';
 
 export default function VaultGame({ deck, names, onExit }: Props) {
   const [started, setStarted] = useState(false);
-  const [items, setItems] = useState<Item[]>(() => read<Item[]>(KEY, []));
+  const [items, setItems] = useState<Item[]>(() => read<Item[]>(KEY, [], isVaultItems));
   const [drafting, setDrafting] = useState(false);
   const [author, setAuthor] = useState<0 | 1>(0);
   const [text, setText] = useState('');

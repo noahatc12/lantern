@@ -92,7 +92,63 @@ const STRUCTURAL = [
 
 const problems = [];
 let cardsChecked = 0;
+let stringsChecked = 0;
 let decksChecked = 0;
+
+/** Keys whose values are slugs or machine identifiers, not prose. */
+const NOT_PROSE = new Set(['id', 'engine', 'key', 'duration', 'v']);
+
+/** Every string in the object tree, with the path it was found at. */
+function walkStrings(node, visit, path = '') {
+  if (typeof node === 'string') {
+    visit(node, path || '(root)');
+    return;
+  }
+  if (Array.isArray(node)) {
+    node.forEach((v, i) => walkStrings(v, visit, `${path}[${i}]`));
+    return;
+  }
+  if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node)) {
+      if (NOT_PROSE.has(k)) continue;
+      walkStrings(v, visit, path ? `${path}.${k}` : k);
+    }
+  }
+}
+
+/** Content rules only. Structural card rules stay in checkCard. */
+function checkText(deckName, optIn, text, where) {
+  if (!text.trim()) return;
+  stringsChecked += 1;
+
+  for (const re of LIST_A) {
+    if (re.test(text)) {
+      problems.push({
+        level: 'BANNED',
+        where: `${deckName} ${where}`,
+        msg: `List A match ${re} :: "${text.slice(0, 90)}"`,
+      });
+    }
+  }
+
+  for (const re of LIST_B) {
+    if (re.test(text) && !optIn) {
+      problems.push({
+        level: 'GATED',
+        where: `${deckName} ${where}`,
+        msg: `List B match ${re} in a base deck :: "${text.slice(0, 90)}"`,
+      });
+    }
+  }
+
+  if (text.includes('—')) {
+    problems.push({
+      level: 'ERROR',
+      where: `${deckName} ${where}`,
+      msg: 'contains an em dash (house style: never)',
+    });
+  }
+}
 
 function checkCard(deckName, optIn, card, index) {
   const where = `${deckName} #${index} (${card.id ?? 'no id'})`;
@@ -108,34 +164,8 @@ function checkCard(deckName, optIn, card, index) {
     problems.push({ level: 'ERROR', where, msg: `tier must be an integer 1-5, got ${tier}` });
   }
 
-  for (const re of LIST_A) {
-    if (re.test(text)) {
-      problems.push({
-        level: 'BANNED',
-        where,
-        msg: `List A match ${re} :: "${text.slice(0, 90)}"`,
-      });
-    }
-  }
-
-  for (const re of LIST_B) {
-    if (re.test(text)) {
-      if (optIn) continue;
-      if (card.lintOk) continue;
-      problems.push({
-        level: 'GATED',
-        where,
-        msg: `List B match ${re} in a base deck :: "${text.slice(0, 90)}"`,
-      });
-    }
-  }
-
-  for (const rule of STRUCTURAL) {
-    if (rule.test(text)) {
-      problems.push({ level: 'ERROR', where, msg: rule.msg });
-    }
-  }
-
+  // Content rules are applied by the tree walk, which sees every string in the
+  // deck rather than only the ones reachable from here.
   cardsChecked += 1;
 }
 
@@ -163,17 +193,33 @@ async function main() {
 
     decksChecked += 1;
     const optIn = deck.optIn === true;
+
+    // Engine contract. A deck that does not satisfy its engine renders wrong
+    // rather than failing, which is the quietest way to ship something broken.
+    const CONTRACTS = {
+      ladder: (d) => d.cards.every((c) => typeof c.rung === 'number') || 'every card needs a rung',
+      timer: (d) => d.cards.every((c) => typeof c.at === 'number') || 'every card needs an at',
+      builder: (d) => (Array.isArray(d.slotDefs) && d.slotDefs.length > 0) || 'needs slotDefs',
+      predict: (d) => typeof d.slotCount === 'number' || 'needs slotCount',
+    };
+    const contract = CONTRACTS[deck.engine];
+    if (contract) {
+      const verdict = contract(deck);
+      if (verdict !== true) {
+        problems.push({ level: 'ERROR', where: file, msg: `engine "${deck.engine}": ${verdict}` });
+      }
+    }
     const cards = Array.isArray(deck.cards) ? deck.cards : [];
 
-    // Builder decks hold their content in slot pools rather than cards. Without
-    // this, that content would bypass every rule in the file silently, which is
-    // the worst kind of gap: the lint would still report PASS.
-    const slotDefs = Array.isArray(deck.slotDefs) ? deck.slotDefs : [];
-    slotDefs.forEach((def, di) => {
-      const options = Array.isArray(def.options) ? def.options : [];
-      options.forEach((opt, oi) => {
-        checkCard(file, optIn, { id: `${def.key ?? di}:${oi}`, ...opt }, `slot ${di}.${oi}`);
-      });
+    // Walk the ENTIRE deck and lint every string in it, wherever it lives.
+    //
+    // This used to check `cards[]` only, so builder slot pools shipped
+    // unchecked while the lint still reported PASS. Patching in slotDefs fixed
+    // that instance and left the class: any field added later would be exempt
+    // again by default. Closed-by-default instead. A new shape cannot escape a
+    // tree walk, only an allowlist of known locations.
+    walkStrings(deck, (value, path) => {
+      checkText(file, optIn, value, path);
     });
 
     const seen = new Map();
@@ -201,7 +247,7 @@ async function main() {
   }
 
   console.log(
-    `\ndeck lint: ${decksChecked} deck(s), ${cardsChecked} card(s) checked. ` +
+    `\ndeck lint: ${decksChecked} deck(s), ${cardsChecked} card(s), ${stringsChecked} string(s) checked. ` +
       `${banned.length} banned, ${gated.length} gated, ${errors.length} structural.`,
   );
 

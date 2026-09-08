@@ -1270,3 +1270,29 @@ input {
 .home__names {
   min-width: 56px;
 }
+
+/* Update banner. Sits above everything, does nothing until tapped: reloading
+   on its own would drop whatever you were in the middle of, and this app has
+   screens you would not want interrupted. */
+.updatebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  min-height: 44px;
+  padding: calc(var(--safe-top) + 10px) var(--s4) 10px;
+  border: 0;
+  border-bottom: 1px solid var(--accent-deep);
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  color: #1a1408;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  animation: screenIn var(--t-mid) var(--ease) both;
+}
+
+/* Push content clear of the banner when it is showing. */
+.updatebar ~ main {
+  padding-top: calc(var(--safe-top) + 60px);
+}
