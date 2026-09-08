@@ -235,6 +235,23 @@ export default function App() {
       <footer className="shell__foot">
         <span>bottom safe-area probe</span>
       </footer>
+
+      {/*
+        The decisive test. Numbers told us env() reads 0; they cannot tell us
+        whether that is correct. The real question is whether content at the
+        bottom of the viewport gets obscured by the home indicator, and looking
+        at a marker pinned there answers it directly.
+
+        RAW sits at viewport bottom 0. SAFE sits above env(safe-area-inset-bottom).
+        If env() is 0 they overlap exactly. If RAW is cut off or sits under the
+        home indicator, we need a manual constant instead of trusting env().
+      */}
+      <div className="edge edge--safe">
+        <span>SAFE inset</span>
+      </div>
+      <div className="edge edge--raw">
+        <span>RAW bottom 0 &mdash; fully visible?</span>
+      </div>
     </main>
   );
 }

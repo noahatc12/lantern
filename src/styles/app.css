@@ -268,3 +268,34 @@ body {
   border-color: #7a3a30;
   color: var(--bad);
 }
+
+/* Visual safe-area probes. RAW is pinned to the literal viewport bottom; SAFE
+   sits above env(safe-area-inset-bottom). If env() is 0 they stack adjacently.
+   The question these answer is not "what number" but "is it obscured". */
+.edge {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.edge--raw {
+  bottom: 0;
+  background: #e8735c;
+  color: #2a0f0a;
+}
+
+.edge--safe {
+  bottom: max(env(safe-area-inset-bottom), 0px);
+  margin-bottom: 26px;
+  background: #6ec98a;
+  color: #0a2113;
+}
