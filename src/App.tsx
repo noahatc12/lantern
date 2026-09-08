@@ -166,8 +166,8 @@ export default function App() {
       {
         label: 'shim applied',
         value: shim.shimmed
-          ? `YES - env lied, using ${shim.bottom}px bottom`
-          : `no - env usable, using ${shim.bottom}px bottom`,
+          ? `YES - env lied, reserving ${shim.bottom}px (standalone=${shim.standalone})`
+          : `no - env usable, reserving ${shim.bottom}px (standalone=${shim.standalone})`,
         ok: true,
       },
       {
@@ -256,10 +256,10 @@ export default function App() {
         home indicator, we need a manual constant instead of trusting env().
       */}
       <div className="edge edge--safe">
-        <span>SAFE inset</span>
+        <span>&#9650; CAN YOU READ THIS WHOLE LINE?</span>
       </div>
       <div className="edge edge--raw">
-        <span>RAW bottom 0 &mdash; fully visible?</span>
+        <span>control &mdash; expected to be covered</span>
       </div>
     </main>
   );

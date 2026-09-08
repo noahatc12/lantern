@@ -60,13 +60,17 @@ export interface SafeAreaResult {
   top: number;
   bottom: number;
   shimmed: boolean;
+  standalone: boolean;
 }
 
 export function installSafeAreaVars(): SafeAreaResult {
   const envTop = envPx('top');
   const envBottom = envPx('bottom');
 
-  const needsShim = envBottom === 0 && hasHomeIndicator() && isStandalone();
+  // Not gated on standalone. Safari hides its toolbar on scroll, which lets
+  // content reach the same strip, and over-reserving costs a few pixels while
+  // under-reserving puts a button under the indicator.
+  const needsShim = envBottom === 0 && hasHomeIndicator();
   const bottom = needsShim
     ? IOS_HOME_INDICATOR_PX
     : Math.max(envBottom, DEFAULT_FLOOR_PX);
@@ -76,5 +80,5 @@ export function installSafeAreaVars(): SafeAreaResult {
   root.style.setProperty('--safe-bottom', `${bottom}px`);
   root.style.setProperty('--safe-top', `${top}px`);
 
-  return { top, bottom, shimmed: needsShim };
+  return { top, bottom, shimmed: needsShim, standalone: isStandalone() };
 }
