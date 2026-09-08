@@ -52,6 +52,20 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Reset scroll on every screen change.
+   *
+   * Without this you scroll the home list, tap a deck, and land halfway down
+   * the new screen because the window keeps its scroll position across a React
+   * view swap. It shipped, and it was visible in a screenshot I read and
+   * approved: the rules screen started mid-sentence and I registered that as a
+   * crop rather than as the actual scroll position.
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.scrollingElement?.scrollTo(0, 0);
+  }, [screen.at, screen.at === 'game' ? screen.deck.id : null]);
+
   function onUnlocked(b: Bundle) {
     setBundle(b);
     setScreen(names[0] && names[1] ? { at: 'home' } : { at: 'names' });

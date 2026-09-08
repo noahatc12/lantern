@@ -41,10 +41,34 @@ async function snap(page, name) {
   // Let entrance animations settle. Screenshotting mid-transition produced a
   // washed-out frame that I nearly mistook for a contrast problem.
   await page.waitForTimeout(500);
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  if (overflow !== 0) failures.push(`${name}: horizontal overflow ${overflow}px`);
+
+  const m = await page.evaluate(() => {
+    const el = document.documentElement;
+    const first = document.querySelector(
+      '.play__top, .home__top, .gate__title, .stopped__title, .handoff__eyebrow',
+    );
+    const r = first ? first.getBoundingClientRect() : null;
+    return {
+      overflow: el.scrollWidth - el.clientWidth,
+      scrollY: window.scrollY || document.scrollingElement?.scrollTop || 0,
+      topVisible: r ? r.top >= -1 && r.top < window.innerHeight : null,
+      topOffset: r ? Math.round(r.top) : null,
+    };
+  });
+
+  if (m.overflow !== 0) failures.push(`${name}: horizontal overflow ${m.overflow}px`);
+
+  // A screen must start at its top. This is the assertion that would have
+  // caught the scroll-position bug that shipped: React keeps window scroll
+  // across a view swap, so opening a game from a scrolled list landed you
+  // halfway down the new screen. It was visible in a screenshot and I read it
+  // as a crop. Eyes miss this; an assertion cannot.
+  if (m.scrollY !== 0) {
+    failures.push(`${name}: screen opened already scrolled down (scrollY=${m.scrollY})`);
+  }
+  if (m.topVisible === false) {
+    failures.push(`${name}: top of screen is off-viewport (top=${m.topOffset}px)`);
+  }
   await page.screenshot({ path: path.join(OUT, `${String(n).padStart(2, '0')}-${name}.png`) });
 }
 
@@ -103,6 +127,9 @@ async function main() {
   await snap(page, 'home-tier5');
 
   const open = async (title) => {
+    // Scroll first, the way a person browsing the list actually would.
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await page.waitForTimeout(120);
     await page.locator('.deckcard__title', { hasText: title }).click();
     await page.waitForSelector('.rules', { timeout: 10000 });
   };
