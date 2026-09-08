@@ -38,6 +38,9 @@ function check(name, ok, detail = '') {
 
 async function snap(page, name) {
   n += 1;
+  // Let entrance animations settle. Screenshotting mid-transition produced a
+  // washed-out frame that I nearly mistook for a contrast problem.
+  await page.waitForTimeout(500);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
@@ -194,7 +197,9 @@ async function main() {
   await snap(page, 'match-sorting');
 
   const sortAll = async () => {
-    for (let i = 0; i < 40; i++) {
+    // Cap generously and derive nothing from deck size: decks grow, and a
+    // hard-coded loop bound silently turned into a fake failure once already.
+    for (let i = 0; i < 200; i++) {
       if ((await page.locator('.sort').count()) === 0) break;
       const btns = ['.sort__yes', '.sort__maybe', '.sort__no'];
       await page.locator(btns[i % 3]).click();

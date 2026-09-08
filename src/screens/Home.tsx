@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import type { Deck, Tier } from '../types';
+import { BANDS, ENGINE_COLOR, bandFor } from '../lib/engineMeta';
 
 interface Props {
   decks: Deck[];
@@ -17,12 +19,21 @@ const TIER_LABEL: Record<Tier, string> = {
   5: 'no limit',
 };
 
+function tierText(d: Deck): string {
+  return d.tierRange[0] === d.tierRange[1]
+    ? `tier ${d.tierRange[0]}`
+    : `tier ${d.tierRange[0]}–${d.tierRange[1]}`;
+}
+
 export default function Home({ decks, names, maxTier, onPick, onTier, onNames }: Props) {
-  // Gentlest first, then alphabetical. Filesystem order put a tier-5 deck
-  // above a tier-1 one, which is a bad first impression of the whole app.
   const visible = decks
     .filter((d) => d.tierRange[0] <= maxTier)
     .sort((a, b) => a.tierRange[0] - b.tierRange[0] || a.title.localeCompare(b.title));
+
+  const grouped = BANDS.map((band) => ({
+    band,
+    items: visible.filter((d) => bandFor(d.tierRange[0]).key === band.key),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <main className="home">
@@ -42,40 +53,53 @@ export default function Home({ decks, names, maxTier, onPick, onTier, onNames }:
               key={t}
               className={`tier ${t === maxTier ? 'is-on' : ''}`}
               onClick={() => onTier(t)}
+              aria-pressed={t === maxTier}
             >
               <span className="tier__n">{t}</span>
               <span className="tier__label">{TIER_LABEL[t]}</span>
             </button>
           ))}
         </div>
-        <p className="play__note">Set it together before you start. Either of you can lower it mid-game.</p>
+        <p className="tiers__hint">
+          Set it together before you start. Either of you can lower it mid-game.
+        </p>
       </section>
 
-      <p className="decks__count">
-        {visible.length} {visible.length === 1 ? 'game' : 'games'} at this ceiling
-      </p>
+      {grouped.map(({ band, items }) => (
+        <section className="band" key={band.key}>
+          <div className="band__head">
+            <h2 className="band__title">{band.label}</h2>
+            <span className="band__count">{items.length}</span>
+          </div>
+          <p className="band__hint">{band.hint}</p>
 
-      <ul className="decks">
-        {visible.map((d) => (
-          <li key={d.id}>
-            <button className="deckcard" onClick={() => onPick(d)}>
-              <span className="deckcard__title">{d.title}</span>
-              <span className="deckcard__blurb">{d.blurb}</span>
-              <span className="deckcard__meta">
-                {d.tierRange[0] === d.tierRange[1]
-                  ? `tier ${d.tierRange[0]}`
-                  : `tier ${d.tierRange[0]}–${d.tierRange[1]}`}
-                {' · '}
-                {d.duration}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+          <ul className="decks">
+            {items.map((d) => (
+              <li key={d.id}>
+                <button
+                  className="deckcard"
+                  style={{ '--engine': ENGINE_COLOR[d.engine] } as CSSProperties}
+                  onClick={() => onPick(d)}
+                >
+                  <span className="deckcard__title">{d.title}</span>
+                  <span className="deckcard__blurb">{d.blurb}</span>
+                  <span className="deckcard__meta">
+                    {tierText(d)} &middot; {d.duration}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
 
       {visible.length === 0 && (
         <p className="play__note">Nothing at this tier yet. Raise the ceiling.</p>
       )}
+
+      <p className="home__foot">
+        {visible.length} of {decks.length} games available at this ceiling
+      </p>
     </main>
   );
 }
