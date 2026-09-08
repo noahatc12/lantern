@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { installSafeAreaVars } from './lib/safeArea';
 
 /**
  * Phase 0 shell.
@@ -108,6 +109,7 @@ export default function App() {
   const [overflow, setOverflow] = useState<number | null>(null);
 
   useEffect(() => {
+    const shim = installSafeAreaVars();
     const store = storageProbe();
     const inline = insetsInline();
     const sheet = insetsStylesheet();
@@ -160,6 +162,13 @@ export default function App() {
         // The two paths measure the same thing. Disagreement means the probe is
         // wrong, not the device.
         ok: sheet.top === inline.top && sheet.bottom === inline.bottom,
+      },
+      {
+        label: 'shim applied',
+        value: shim.shimmed
+          ? `YES - env lied, using ${shim.bottom}px bottom`
+          : `no - env usable, using ${shim.bottom}px bottom`,
+        ok: true,
       },
       {
         label: 'env() sentinel',

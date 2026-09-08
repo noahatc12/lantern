@@ -1,4 +1,8 @@
 :root {
+  /* Set at runtime by src/lib/safeArea.ts. The fallbacks here only apply
+     before that runs, or if scripting fails. */
+  --safe-bottom: 16px;
+  --safe-top: 0px;
   --bg: #0f0e13;
   --panel: #17161d;
   --line: #262430;
@@ -166,7 +170,7 @@ body {
   margin-top: auto;
   /* max() not +: guarantees real breathing room when the inset is 0 (headless,
      desktop, non-notched phones) instead of a 12px sliver. */
-  padding: 14px 0 max(env(safe-area-inset-bottom), 20px);
+  padding: 14px 0 calc(var(--safe-bottom) + 8px);
   border-top: 1px solid var(--line);
   color: var(--ink-dim);
   font-size: 12px;
@@ -201,7 +205,7 @@ body {
   justify-content: center;
   gap: 8px;
   background: var(--bg);
-  padding: max(env(safe-area-inset-bottom), 20px) 24px;
+  padding: calc(var(--safe-bottom) + 8px) 24px;
 }
 
 .handoff__eyebrow {
@@ -240,7 +244,7 @@ body {
 .tl {
   position: fixed;
   right: 12px;
-  bottom: max(env(safe-area-inset-bottom), 16px);
+  bottom: var(--safe-bottom);
   z-index: 40;
   display: flex;
   gap: 8px;
@@ -294,7 +298,7 @@ body {
 }
 
 .edge--safe {
-  bottom: max(env(safe-area-inset-bottom), 0px);
+  bottom: var(--safe-bottom);
   margin-bottom: 26px;
   background: #6ec98a;
   color: #0a2113;
