@@ -148,32 +148,112 @@ export const RULES: Record<EngineId, Rules> = {
   // Specced but not yet built. Listed so the map stays exhaustive and adding an
   // engine is a compile error until its instructions are written.
   compare: {
-    summary: 'You both answer the same question privately, then both answers appear together.',
+    summary:
+      'You both answer the same question privately, then both answers are shown together.',
     steps: [
-      'Answer the question privately.',
-      'Hand the phone over. They answer the same question.',
-      'Both answers are shown side by side.',
+      'The question appears. One of you answers it privately and taps done.',
+      'The screen goes blank. Hand the phone over.',
+      'The other person answers the same question, without seeing the first answer.',
+      'Both answers appear side by side. Talk about them, then move on.',
     ],
-    notes: ['Nothing is scored. Where the answers differ is the interesting part.'],
+    example: {
+      label: 'A worked example',
+      lines: [
+        'Question: "Where are we living in five years?"',
+        'One of you writes a city. The other writes a different city.',
+        'That gap is the entire reason to run this.',
+      ],
+    },
+    notes: [
+      'Nothing is scored and nothing is saved. Where the answers differ is the point, not who is right.',
+      'Write what you actually think, not what you expect them to want to read. A matched pair of polite answers teaches you nothing.',
+      'Some decks are in a fixed order because they build. Do not skip ahead in those.',
+    ],
   },
   scale: {
-    summary: 'You both rate the same thing. The app shows the gap before the numbers.',
-    steps: ['Rate it privately.', 'Hand over. They rate it.', 'The gap is revealed, then the numbers.'],
-    notes: ['A gap of four or more is worth one sentence each. That is the whole game.'],
+    summary: 'You both rate the same thing 0 to 10. The app shows the GAP before it shows the numbers.',
+    steps: [
+      'A scenario appears. One of you rates it 0 to 10 privately.',
+      'The screen goes blank. Hand the phone over. They rate the same one.',
+      'The distance between your two numbers is shown first.',
+      'Tap again to see the actual numbers.',
+    ],
+    example: {
+      label: 'A worked example',
+      lines: [
+        '0 means not for me. 10 means yes, tonight.',
+        'You said 9, they said 3. The app shows "6 apart" first.',
+        'A gap that size is worth one sentence each on why.',
+      ],
+    },
+    notes: [
+      'The gap shows first on purpose. Numbers first turns it into who wanted it more; distance first keeps it on the difference, which is the only part you can act on.',
+      'Two 8s and two 4s are both agreement, and they are not the same thing. That is what a scale tells you and a yes/no cannot.',
+    ],
   },
   builder: {
-    summary: 'The app assembles a prompt out of parts. Reroll anything that does not fit.',
-    steps: ['Roll.', 'Either of you can veto or reroll any part.', 'Do what it says.'],
-    notes: ['A few dozen parts make hundreds of combinations, so it rarely repeats.'],
+    summary: 'The app rolls a prompt out of separate parts. Reroll any part that does not fit.',
+    steps: [
+      'Tap roll. Each part is drawn independently.',
+      'Reroll any single part you do not want. Either of you can, without explaining.',
+      'Do what the assembled prompt says.',
+      'Roll again for the next one.',
+    ],
+    example: {
+      label: 'A worked example',
+      lines: [
+        'where: back of the neck',
+        'how: fingertips only',
+        'for how long: until they ask for more',
+      ],
+    },
+    notes: [
+      'Reroll one part rather than the whole thing. Throwing away the two parts that were fine is why people stop rerolling and start accepting prompts they did not want.',
+      'A few dozen options make well over a thousand combinations, so it will not repeat on you.',
+    ],
   },
   vault: {
-    summary: 'Write a promise now. Redeem it whenever you want.',
-    steps: ['Write what is owed and by whom.', 'It sits in the vault.', 'Redeem it any time.'],
-    notes: ['A phone remembers an IOU three weeks later, which is exactly why paper coupon books fail.'],
+    summary: 'Write down something one of you owes the other. Redeem it whenever you feel like it.',
+    steps: [
+      'Tap to write a new one. Choose who owes it, and say specifically what.',
+      'Optionally seal it, so it cannot be opened for a set number of days.',
+      'It sits in the vault until someone redeems it.',
+      'Tap redeem when it is cashed in. That cannot be undone.',
+    ],
+    example: {
+      label: 'A worked example',
+      lines: [
+        'Noah owes: a full hour, no phones, doing whatever Lily picks.',
+        'It sits there for three weeks.',
+        'Lily taps redeem on a Tuesday for no reason.',
+      ],
+    },
+    notes: [
+      'Be specific. "A massage" is redeemable; "something nice" never gets cashed.',
+      'This is the one thing a phone does better than paper: it still remembers three weeks later, which is exactly why paper coupon books fail.',
+      'Delete removes it permanently and immediately. There is no bin.',
+    ],
   },
   endurance: {
-    summary: 'Whoever reacts first loses. Restraint is the whole game.',
-    steps: ['Take turns within the drawn constraint.', 'First one to ask for more loses.'],
-    notes: ['Losing is fine. The winner decides what happens next.'],
+    summary: 'Take turns. Whoever asks for more first loses, and losing is the good outcome.',
+    steps: [
+      'A constraint is drawn. Whoever is active has to stay inside it.',
+      'Two minutes each, then swap.',
+      'The moment the receiving one asks for more, tap the button and the game ends.',
+      'The winner decides what happens next.',
+    ],
+    example: {
+      label: 'A worked example',
+      lines: [
+        'Constraint: hands only, no mouth.',
+        'Two minutes on, then swap, then a new constraint.',
+        'Whoever breaks first hands the decision to the other one.',
+      ],
+    },
+    notes: [
+      'This inverts the usual incentive. Normally escalating is the goal; here holding back is, and the tension does the work.',
+      'Losing is not a punishment. It is how the game ends and it is the better half of the deal.',
+      'If nobody breaks inside the cap it is a draw, which is a real outcome and not a failure.',
+    ],
   },
 };

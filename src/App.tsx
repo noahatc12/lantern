@@ -11,6 +11,11 @@ import MatchGame from './games/MatchGame';
 import PredictGame from './games/PredictGame';
 import TimerGame from './games/TimerGame';
 import LadderGame from './games/LadderGame';
+import CompareGame from './games/CompareGame';
+import ScaleGame from './games/ScaleGame';
+import BuilderGame from './games/BuilderGame';
+import VaultGame from './games/VaultGame';
+import EnduranceGame from './games/EnduranceGame';
 
 type Names = [string, string];
 
@@ -109,6 +114,16 @@ export default function App() {
       return <TimerGame deck={deck} onExit={back} />;
     case 'ladder':
       return <LadderGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
+    case 'compare':
+      return <CompareGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
+    case 'scale':
+      return <ScaleGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
+    case 'builder':
+      return <BuilderGame deck={deck} maxTier={maxTier} onExit={back} />;
+    case 'vault':
+      return <VaultGame deck={deck} names={names} onExit={back} />;
+    case 'endurance':
+      return <EnduranceGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
     default:
       return <DrawGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
   }

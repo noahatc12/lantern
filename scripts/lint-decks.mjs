@@ -165,6 +165,17 @@ async function main() {
     const optIn = deck.optIn === true;
     const cards = Array.isArray(deck.cards) ? deck.cards : [];
 
+    // Builder decks hold their content in slot pools rather than cards. Without
+    // this, that content would bypass every rule in the file silently, which is
+    // the worst kind of gap: the lint would still report PASS.
+    const slotDefs = Array.isArray(deck.slotDefs) ? deck.slotDefs : [];
+    slotDefs.forEach((def, di) => {
+      const options = Array.isArray(def.options) ? def.options : [];
+      options.forEach((opt, oi) => {
+        checkCard(file, optIn, { id: `${def.key ?? di}:${oi}`, ...opt }, `slot ${di}.${oi}`);
+      });
+    });
+
     const seen = new Map();
     cards.forEach((card, i) => {
       checkCard(file, optIn, card, i);

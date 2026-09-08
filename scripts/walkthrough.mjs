@@ -313,6 +313,115 @@ async function main() {
   check('Enough ends the game', /stopped at rung/i.test(endText));
   check('end screen never says who stopped it', !/noah|lily/i.test(endText));
   await snap(page, 'ladder-ended');
+  await page.locator('.stopped .btn').click();
+  await page.waitForSelector('.decks', { timeout: 10000 });
+
+  // ---------- Compare ----------
+  await open('One Question');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.answer');
+  await snap(page, 'compare-answer');
+  await page.locator('.answer').fill('answer from the first person');
+  await page.locator('.play__stage--form .btn--primary').click();
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 5000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.answer');
+  const secondBlank = await page.locator('.answer').inputValue();
+  check('the second person starts from a blank field', secondBlank === '', secondBlank);
+  await page.locator('.answer').fill('answer from the second person');
+  await page.locator('.play__stage--form .btn--primary').click();
+  await page.waitForSelector('.compare__side');
+  const bothShown = await txt(page, '.compare');
+  check(
+    'compare reveals both answers together',
+    bothShown.includes('first person') && bothShown.includes('second person'),
+  );
+  await snap(page, 'compare-reveal');
+  await home();
+
+  // ---------- Scale ----------
+  await open('Rate the Scenario');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.scale');
+  await snap(page, 'scale-rate');
+  await page.locator('.scale__btn').nth(9).click();
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 5000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.scale');
+  await page.locator('.scale__btn').nth(3).click();
+  await page.waitForSelector('.gapnum');
+  const gapShown = await txt(page, '.gapnum');
+  check('gap is shown before the numbers', gapShown === '6', gapShown);
+  const numbersHidden = (await page.locator('.scores').count()) === 0;
+  check('the raw numbers are not shown yet', numbersHidden);
+  await snap(page, 'scale-gap');
+  await page.locator('.play__stage .btn--primary').click();
+  await page.waitForSelector('.scores');
+  check('numbers appear on the second tap', true);
+  await snap(page, 'scale-numbers');
+  await home();
+
+  // ---------- Builder ----------
+  await open('Touch Dice');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.rolled');
+  const slotCount2 = await page.locator('.rolled').count();
+  check('builder rolls every slot', slotCount2 >= 3, `${slotCount2} slots`);
+  const before = await page.locator('.rolled__value').allInnerTexts();
+  await snap(page, 'builder-rolled');
+  // Reroll one slot until it changes, then confirm the others held.
+  let changedOne = false;
+  for (let i = 0; i < 12 && !changedOne; i++) {
+    await page.locator('.rolled__reroll').first().click();
+    const after = await page.locator('.rolled__value').allInnerTexts();
+    if (after[0] !== before[0]) {
+      changedOne = after.slice(1).every((v, idx) => v === before[idx + 1]);
+      check('rerolling one part leaves the others alone', changedOne);
+    }
+  }
+  if (!changedOne) check('rerolling one part leaves the others alone', false, 'never changed');
+  await home();
+
+  // ---------- Vault ----------
+  await open('The Vault');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.vault');
+  await page.locator('.vault .btn--primary').click();
+  await page.waitForSelector('.answer');
+  await page.locator('.answer').fill('one hour, no phones, their choice');
+  await page.locator('.play__stage--form .btn--primary').click();
+  await page.waitForSelector('.iou');
+  check('a written promise appears in the vault', (await page.locator('.iou').count()) === 1);
+  await snap(page, 'vault-list');
+  await page.locator('.iou .btn--primary').click();
+  await page.waitForTimeout(200);
+  const stillOpen = await page.locator('.iou').count();
+  check('redeeming moves it out of the open list', stillOpen === 0, `${stillOpen} still open`);
+  const redeemed = await txt(page, '.vault');
+  check('redeemed items are still readable', /redeemed/i.test(redeemed));
+  await snap(page, 'vault-redeemed');
+  await home();
+
+  // ---------- Endurance ----------
+  await open('First to Break');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.clock');
+  const c1 = await txt(page, '.card');
+  check('a constraint is drawn', c1.length > 0);
+  await snap(page, 'endurance-turn');
+  await page.locator('.play__actions .btn--ghost').click();
+  await page.waitForTimeout(200);
+  const activeAfter = await txt(page, '.play__eyebrow');
+  check('swapping changes who is active', /lily/i.test(activeAfter), activeAfter);
+  await page.locator('.play__actions .btn--primary').click();
+  await page.waitForSelector('.stopped__title');
+  const endur = await txt(page, '.stopped');
+  check('giving in ends the game with a named outcome', /broke first|draw/i.test(endur));
+  await snap(page, 'endurance-over');
+  await page.locator('.stopped .btn').click();
+  await page.waitForSelector('.decks', { timeout: 10000 });
+  const finalCount = await page.locator('.deckcard').count();
+  check('every deck is reachable from home', finalCount >= 29, `${finalCount} decks listed`);
 
   await browser.close();
 
