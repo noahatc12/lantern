@@ -11,9 +11,23 @@ npm install
 npm run dev          # --host, so a phone on the same wifi can open it
 npm run build
 npm run preview      # serves dist at :4173
-npm run check        # typecheck + content lint
-npm run shots        # Playwright screenshots + layout assertions
+npm run check        # typecheck + tests + content lint
+npm run audit        # drives the real app end to end, 44 interaction assertions
+npm run publish      # lint, seal, commit, push, verify live  <- after ANY content change
 ```
+
+## Publishing content
+
+Source content lives in `decks/*.json`, which is gitignored and never leaves
+this machine. Only the encrypted bundle is committed. After changing any deck:
+
+```
+npm run publish
+```
+
+It prompts for the passphrase, seals, commits, pushes, and then waits until the
+live bundle actually matches what it just sealed. A green deploy only says the
+job ran; it does not say the right bytes are being served.
 
 ## Design notes
 
