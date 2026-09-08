@@ -22,7 +22,10 @@ function readCssPx(prop: string): string {
   return px;
 }
 
-function safeAreaInsets(): Record<'top' | 'right' | 'bottom' | 'left', string> {
+type Insets = Record<'top' | 'right' | 'bottom' | 'left', string>;
+
+/** Path 1: env() applied through an inline style attribute. */
+function insetsInline(): Insets {
   const probe = document.createElement('div');
   probe.style.cssText = [
     'position:fixed',
@@ -41,6 +44,38 @@ function safeAreaInsets(): Record<'top' | 'right' | 'bottom' | 'left', string> {
     bottom: cs.paddingBottom,
     left: cs.paddingLeft,
   };
+  probe.remove();
+  return out;
+}
+
+/** Path 2: the same env() applied through a stylesheet rule instead. */
+function insetsStylesheet(): Insets {
+  const probe = document.createElement('div');
+  probe.className = 'sa-probe';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe);
+  const out = {
+    top: cs.paddingTop,
+    right: cs.paddingRight,
+    bottom: cs.paddingBottom,
+    left: cs.paddingLeft,
+  };
+  probe.remove();
+  return out;
+}
+
+/**
+ * Sentinel. env(safe-area-inset-top, 999px) returns the fallback only when the
+ * UA has not defined that variable at all. So 999px means "env undefined here"
+ * and 0px means "env defined and genuinely zero" - different bugs, different
+ * fixes, and this one number separates them.
+ */
+function insetSentinel(): { top: string; bottom: string } {
+  const probe = document.createElement('div');
+  probe.className = 'sa-sentinel';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe);
+  const out = { top: cs.paddingTop, bottom: cs.paddingBottom };
   probe.remove();
   return out;
 }
@@ -74,14 +109,34 @@ export default function App() {
 
   useEffect(() => {
     const store = storageProbe();
-    const inset = safeAreaInsets();
+    const inline = insetsInline();
+    const sheet = insetsStylesheet();
+    const sentinel = insetSentinel();
     const vv = window.visualViewport;
+
+    const meta = document
+      .querySelector('meta[name="viewport"]')
+      ?.getAttribute('content');
+    const coverPresent = Boolean(meta && meta.includes('viewport-fit=cover'));
+
+    // Derived independently of env(): on a notched phone the window is inset
+    // from the physical screen, so the difference is the inset the OS applied,
+    // whether or not env() reports it.
+    const impliedVertical = window.screen.height - window.innerHeight;
 
     setRows([
       { label: 'display mode', value: displayMode() },
       {
         label: 'viewport',
         value: `${window.innerWidth} x ${window.innerHeight} css px`,
+      },
+      {
+        label: 'screen',
+        value: `${window.screen.width} x ${window.screen.height} css px`,
+      },
+      {
+        label: 'screen - window',
+        value: `${impliedVertical}px vertical (inset the OS actually applied)`,
       },
       {
         label: 'visual viewport',
@@ -91,9 +146,27 @@ export default function App() {
       { label: '100vh resolves to', value: readCssPx('100vh') },
       { label: '100dvh resolves to', value: readCssPx('100dvh') },
       {
-        label: 'safe area (t/r/b/l)',
-        value: `${inset.top} / ${inset.right} / ${inset.bottom} / ${inset.left}`,
-        ok: parseFloat(inset.bottom) > 0 || undefined,
+        label: 'viewport-fit=cover',
+        value: coverPresent ? 'present' : 'MISSING from the meta tag',
+        ok: coverPresent,
+      },
+      {
+        label: 'safe area, inline',
+        value: `${inline.top} / ${inline.right} / ${inline.bottom} / ${inline.left}`,
+      },
+      {
+        label: 'safe area, stylesheet',
+        value: `${sheet.top} / ${sheet.right} / ${sheet.bottom} / ${sheet.left}`,
+        // The two paths measure the same thing. Disagreement means the probe is
+        // wrong, not the device.
+        ok: sheet.top === inline.top && sheet.bottom === inline.bottom,
+      },
+      {
+        label: 'env() sentinel',
+        value:
+          parseFloat(sentinel.top) === 999
+            ? `${sentinel.top} / ${sentinel.bottom} -> env is UNDEFINED here`
+            : `${sentinel.top} / ${sentinel.bottom} -> env is defined`,
       },
       {
         label: 'localStorage',

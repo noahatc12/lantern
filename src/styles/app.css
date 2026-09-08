@@ -85,6 +85,30 @@ body {
   margin: 0;
 }
 
+/* Safe-area probes. Two independent measurement paths that must agree, plus a
+   sentinel fallback. If the sentinel reports 999px, env() is undefined in this
+   context; if it reports 0px, env() is defined and genuinely zero. Those are
+   different bugs with different fixes, and one number tells them apart. */
+.sa-probe {
+  position: fixed;
+  visibility: hidden;
+  top: 0;
+  left: 0;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+.sa-sentinel {
+  position: fixed;
+  visibility: hidden;
+  top: 0;
+  left: 0;
+  padding-top: env(safe-area-inset-top, 999px);
+  padding-bottom: env(safe-area-inset-bottom, 999px);
+}
+
 .row {
   display: grid;
   grid-template-columns: 130px 1fr;
