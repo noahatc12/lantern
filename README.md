@@ -9,12 +9,50 @@ accounts, no analytics, no third-party requests. All state lives in
 ```
 npm install
 npm run dev          # --host, so a phone on the same wifi can open it
-npm run build
-npm run preview      # serves dist at :4173
-npm run check        # typecheck + tests + content lint
-npm run audit        # drives the real app end to end, 44 interaction assertions
-npm run publish      # lint, seal, commit, push, verify live  <- after ANY content change
+npm run verify       # THE gate: everything, headless then browser
+npm run publish      # verify, seal, commit, push, confirm live  <- after ANY change
 ```
+
+Individual gates, if you want to run one on its own:
+
+```
+npm run typecheck
+npm run test         # unit, 42
+npm run lint:decks   # content rules over every string in every deck
+npm run mutate       # proves each gate can actually fail
+npm run budget       # bundle size ceiling
+npm run audit        # 47 scripted interaction assertions
+npm run monkey       # random interaction, continuous invariants
+npm run scenarios    # 26 checks against pre-seeded, dirty storage
+npm run soak         # 100 turns, catches slow divergence
+npm run a11y         # axe, WCAG 2.1 AA, across 7 screens
+```
+
+## How the gates are split, and why
+
+`npm run verify` runs two halves.
+
+**Headless** (typecheck, unit, content lint, mutation, build, size budget) needs
+no browser, no content and no secrets, so it runs in CI on every push.
+
+**Browser** (audit, monkey, scenarios, soak, accessibility) drives the real app
+against the real sealed content, which needs the passphrase. That is
+deliberately not in CI: putting it in Actions secrets would undo the property
+the encryption exists for. So this half gates `npm run publish` instead, which
+means nothing reaches the deployed app without passing it.
+
+The split is a consequence of the encryption design, not of laziness.
+
+## Why there is a mutation suite
+
+Twice in this project a gate reported success while enforcing nothing: a content
+lint whose rules were all inert, and a unit suite that passed on a draw engine
+whose difficulty ladder could never leave its lowest tier. In both cases the
+green tick was the problem, because it stopped anyone looking.
+
+`npm run mutate` breaks nine things on purpose and asserts the relevant gate goes
+red. A mutation that survives is reported as a failure of the SUITE, not of the
+code.
 
 ## Publishing content
 

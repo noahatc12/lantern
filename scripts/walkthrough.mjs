@@ -14,11 +14,17 @@
  */
 
 import { mkdir, rm } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { chromium, devices } from 'playwright';
 
 const BASE = process.env.WALK_BASE ?? 'http://localhost:4175/lantern/';
-const PASS = process.env.WALK_PASS;
+// Falls back to the local passphrase file, same as every other harness. This
+// was the only one that did not, which is why it was the only one that failed
+// when the runner stopped passing it explicitly.
+const PASS =
+  process.env.WALK_PASS ??
+  (existsSync('.passphrase.local') ? readFileSync('.passphrase.local', 'utf8').trim() : undefined);
 const OUT = path.resolve('shots', 'walk');
 
 if (!PASS) {

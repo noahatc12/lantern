@@ -21,33 +21,30 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Engine tests
+      - name: Unit tests
         run: npm run test
 
       # Near-vacuous here by design: decks/*.json is gitignored, so CI normally
       # sees no plaintext. Its job in CI is to catch plaintext committed by
-      # mistake. The real gate is the pre-push hook, where the plaintext lives.
-      - name: Deck lint
+      # mistake. The real content gate is the pre-push run, where the source is.
+      - name: Content lint
         run: npm run lint:decks
+
+      # Every gate proves it can fail. Two gates in this project have reported
+      # success while enforcing nothing, and a green tick was what stopped
+      # anyone looking. This is the check on the checks.
+      - name: Mutation suite
+        run: npm run mutate
 
       - name: Build
         run: npm run build
 
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Bundle budget
+        run: npm run budget
 
-      - name: Layout assertions
-        run: |
-          npx vite preview --port 4173 &
-          for i in $(seq 1 60); do
-            curl -sf http://localhost:4173/lantern/ >/dev/null && break
-            sleep 1
-          done
-          npm run shots
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: shots
-          path: shots/
-          retention-days: 7
+      # NOTE: the browser half of the suite (interaction audit, monkey,
+      # dirty-state scenarios, soak, accessibility) is deliberately NOT run
+      # here. It drives the real app against the real sealed content, which
+      # needs the passphrase, and putting that in Actions secrets would undo the
+      # property the encryption exists for. That half gates `npm run publish`
+      # instead, so nothing reaches the deployed app without passing it.
