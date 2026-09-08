@@ -11,7 +11,8 @@
     "lint:decks": "node scripts/lint-decks.mjs",
     "shots": "node scripts/shots.mjs",
     "check": "npm run typecheck && npm run test && npm run lint:decks",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seal": "node scripts/seal.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
