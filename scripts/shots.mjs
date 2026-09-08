@@ -45,7 +45,7 @@ async function shoot(browser, target) {
   page.on('pageerror', (e) => consoleErrors.push(String(e)));
 
   await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.shell__head h1');
+  await page.waitForSelector('main');
 
   const overflow = await page.evaluate(() => {
     const el = document.documentElement;

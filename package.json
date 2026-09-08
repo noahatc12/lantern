@@ -12,7 +12,8 @@
     "shots": "node scripts/shots.mjs",
     "check": "npm run typecheck && npm run test && npm run lint:decks",
     "test": "vitest run",
-    "seal": "node scripts/seal.mjs"
+    "seal": "node scripts/seal.mjs",
+    "walk": "node scripts/walkthrough.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
