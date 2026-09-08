@@ -47,8 +47,8 @@
 
   /* Ink */
   --ink: #f2eef7;
-  --ink-mid: #b8b0c6;
-  --ink-dim: #8f869e;
+  --ink-mid: #c4bdd0;
+  --ink-dim: #a9a2b8;
 
   /* Accent and semantics */
   --accent: #e8b64c;
@@ -1295,4 +1295,52 @@ input {
 /* Push content clear of the banner when it is showing. */
 .updatebar ~ main {
   padding-top: calc(var(--safe-top) + 60px);
+}
+
+.crashlog {
+  max-width: 100%;
+  margin: 0 0 var(--s4);
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--bad);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.stopped .btn {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: var(--s2);
+}
+
+/* Focus. Only for keyboard and switch users, via :focus-visible, so a tap does
+   not leave a ring behind on touch. axe does not fail you for missing these,
+   which is exactly why they get forgotten. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.btn:focus-visible,
+.deckcard:focus-visible,
+.guess:focus-visible,
+.tier:focus-visible,
+.scale__btn:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Honour a system request for higher contrast. */
+@media (prefers-contrast: more) {
+  :root {
+    --ink-mid: #ded8e8;
+    --ink-dim: #c9c2d6;
+    --line: #4a4359;
+  }
 }

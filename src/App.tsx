@@ -51,6 +51,12 @@ function UpdateBanner() {
 }
 
 function AppBody() {
+  // Test hook. The harness sets this to prove the error boundary actually
+  // catches, recovers and records. Inert unless deliberately set.
+  if (read<boolean>('__crashtest', false) === true) {
+    throw new Error('deliberate crash from the test hook');
+  }
+
   const [screen, setScreen] = useState<Screen>({ at: 'boot' });
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [names, setNames] = useState<Names>(() => read<Names>('names', ['', ''], isNames));

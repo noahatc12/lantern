@@ -34,7 +34,13 @@ function check(scenario, name, ok, detail = '') {
 async function withState(browser, state, fn, { expectUnlocked = true } = {}) {
   const ctx = await browser.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 } });
   const errors = [];
+  // Seed ONCE, on the first load only. addInitScript runs on every navigation,
+  // so re-seeding made a reload behave unlike any real reload: changes the app
+  // or the test made in between were silently reverted. A reload must see
+  // storage as the app actually left it.
   await ctx.addInitScript((seed) => {
+    if (window.localStorage.getItem('lantern.__seeded')) return;
+    window.localStorage.setItem('lantern.__seeded', '1');
     for (const [k, v] of Object.entries(seed)) {
       window.localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
     }
@@ -220,6 +226,34 @@ async function main() {
     check('reload', 'scroll is at the top after reload', (await page.evaluate(() => window.scrollY)) === 0);
     check('reload', 'no errors', errors.length === 0, errors.join('|'));
   });
+
+  // ---- 6. A render error -----------------------------------------------
+  // A boundary nobody has watched catch anything is decoration.
+  console.log('\nscenario: the app throws while rendering');
+  await withState(
+    browser,
+    { ...unlocked, 'lantern.__crashtest': 'true' },
+    async (page) => {
+      await page.waitForSelector('.stopped', { timeout: 20000 });
+      const txt = await page.locator('.stopped').innerText();
+      check('crash', 'shows a recovery screen instead of a blank page', /did not work/i.test(txt));
+      check('crash', 'shows what went wrong', /deliberate crash/i.test(txt), txt.slice(0, 80));
+      check('crash', 'offers a reload', /reload/i.test(txt));
+      check('crash', 'offers a destructive reset, labelled as such', /clearing this device/i.test(txt));
+
+      const logged = await page.evaluate(() => localStorage.getItem('lantern.lastError'));
+      check('crash', 'writes the error to the device for later', Boolean(logged));
+      const parsed = logged ? JSON.parse(logged) : {};
+      check('crash', 'the record has a timestamp and a message', Boolean(parsed.at && parsed.message));
+
+      // Recovery actually recovers.
+      await page.evaluate(() => localStorage.removeItem('lantern.__crashtest'));
+      await page.locator('.btn--primary').click();
+      await page.waitForSelector('.decks', { timeout: 20000 });
+      check('crash', 'reload returns to a working app', true);
+    },
+    { expectUnlocked: false },
+  );
 
   await browser.close();
 

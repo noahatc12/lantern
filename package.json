@@ -18,16 +18,19 @@
     "publish": "node scripts/publish.mjs",
     "monkey": "node scripts/monkey.mjs",
     "scenarios": "node scripts/scenarios.mjs",
-    "soak": "node scripts/soak.mjs"
+    "soak": "node scripts/soak.mjs",
+    "a11y": "node scripts/a11y.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "axe-core": "^4.13.0",
     "playwright": "^1.49.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
