@@ -24,12 +24,61 @@ const PBKDF2_ITERATIONS = 600_000;
 const DECK_DIR = path.resolve('decks');
 const OUT = path.resolve('public', 'content.enc');
 
-const passphrase = process.env.LANTERN_PASSPHRASE;
-if (!passphrase) {
-  console.error('LANTERN_PASSPHRASE is not set. Refusing to seal.');
-  console.error("Usage:  LANTERN_PASSPHRASE='your phrase' npm run seal");
-  process.exit(1);
+/**
+ * Passphrase input, in order of preference:
+ *   1. interactive prompt (default) - nothing lands in shell history
+ *   2. LANTERN_PASSPHRASE env var   - for scripted use
+ *
+ * The prompt exists because the env-var form is shell-specific: bash wants
+ * VAR='x' cmd and PowerShell wants $env:VAR='x'; cmd, which is an easy and
+ * confusing way to fail. Prompting works identically everywhere.
+ */
+async function prompt(question) {
+  const { createInterface } = await import('node:readline');
+  return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+    // Mask what is typed so the passphrase does not sit on screen.
+    const onData = (char) => {
+      if (['\n', '\r', ''].includes(String(char))) {
+        process.stdin.removeListener('data', onData);
+      } else {
+        process.stdout.write('\x1b[2K\x1b[200D' + question + '*'.repeat(rl.line.length));
+      }
+    };
+    process.stdin.on('data', onData);
+    rl.question(question, (answer) => {
+      process.stdout.write('\n');
+      rl.close();
+      resolve(answer);
+    });
+  });
 }
+
+async function getPassphrase() {
+  if (process.env.LANTERN_PASSPHRASE) return process.env.LANTERN_PASSPHRASE;
+  if (!process.stdin.isTTY) {
+    console.error('No passphrase. Set LANTERN_PASSPHRASE, or run this in a terminal to be asked.');
+    console.error("  PowerShell:  $env:LANTERN_PASSPHRASE='your phrase'; npm run seal");
+    console.error("  bash:        LANTERN_PASSPHRASE='your phrase' npm run seal");
+    process.exit(1);
+  }
+  const first = await prompt('Passphrase: ');
+  if (first.length < 12) {
+    console.error(
+      `\nThat is ${first.length} characters. Use at least 12.\n` +
+        'It is the only thing standing between the content and anyone with the URL.',
+    );
+    process.exit(1);
+  }
+  const again = await prompt('Again, to be sure: ');
+  if (first !== again) {
+    console.error('\nThose did not match. Nothing was sealed.');
+    process.exit(1);
+  }
+  return first;
+}
+
+const passphrase = await getPassphrase();
 if (passphrase.length < 12) {
   console.error(
     `Passphrase is ${passphrase.length} characters. Use at least 12.\n` +
