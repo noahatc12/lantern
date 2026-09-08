@@ -16,7 +16,9 @@
     "walk": "node scripts/walkthrough.mjs",
     "audit": "node scripts/walkthrough.mjs",
     "publish": "node scripts/publish.mjs",
-    "monkey": "node scripts/monkey.mjs"
+    "monkey": "node scripts/monkey.mjs",
+    "scenarios": "node scripts/scenarios.mjs",
+    "soak": "node scripts/soak.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

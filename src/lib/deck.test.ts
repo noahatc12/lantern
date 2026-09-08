@@ -336,3 +336,33 @@ describe('poolProgress', () => {
     expect(poolProgress(deck, state)).toEqual({ seen: 1, total: 2 });
   });
 });
+
+describe('recycling is scoped to the exhausted pool (regression)', () => {
+  it('does not wipe history for cards outside the pool that ran out', () => {
+    // Two disjoint groups, as a split deck produces when each draw is scoped to
+    // one half. Exhausting group A must not forget group B.
+    const groupA = [makeCard('a1', 1), makeCard('a2', 1)];
+    const groupB = [makeCard('b1', 1), makeCard('b2', 1), makeCard('b3', 1)];
+    const deckA = makeDeck(groupA);
+    const rng = mulberry32(5);
+
+    // Pretend group B has already been seen this session.
+    let state = {
+      ...startSession(config()),
+      drawn: groupB.map((c) => c.id),
+      drawCount: 3,
+    };
+
+    // Draw group A dry, then once more to force a recycle.
+    state = draw(deckA, state, rng).state;
+    state = draw(deckA, state, rng).state;
+    const recycled = draw(deckA, state, rng);
+
+    expect(recycled.recycled).toBe(true);
+    for (const c of groupB) {
+      expect(recycled.state.drawn).toContain(c.id);
+    }
+    // And group A's history is down to just the card it re-drew.
+    expect(recycled.state.drawn.filter((id) => id.startsWith('a'))).toHaveLength(1);
+  });
+});

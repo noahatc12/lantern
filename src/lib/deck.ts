@@ -88,7 +88,16 @@ export function draw(deck: Deck, state: SessionState, rng: () => number): DrawRe
   }
 
   const picked = shuffle(unseen, rng)[0] as Card;
-  const drawn = recycled ? [picked.id] : [...state.drawn, picked.id];
+
+  // On recycle, clear ONLY the ids belonging to the pool that ran out. Resetting
+  // the whole history wiped unrelated cards: a split deck scopes each draw to
+  // one half, so the smaller half exhausting erased the larger half's history
+  // and cards started repeating while plenty were still unseen. The soak caught
+  // it at draw 102 of 120.
+  const poolIds = new Set(pool.map((c) => c.id));
+  const drawn = recycled
+    ? [...state.drawn.filter((id) => !poolIds.has(id)), picked.id]
+    : [...state.drawn, picked.id];
 
   // Turn is NOT advanced here. Drawing and taking a turn are different events:
   // a skip draws a replacement card for the SAME person, and folding the turn

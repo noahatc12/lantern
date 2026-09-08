@@ -127,7 +127,7 @@ async function main() {
   await page.waitForSelector('.gate__input', { timeout: 20000 });
   await page.fill('.gate__input', PASS);
   await page.click('button[type="submit"]');
-  await page.waitForSelector('.gate__title', { timeout: 40000 });
+  await page.waitForFunction(() => document.querySelectorAll('.gate__input').length === 2, { timeout: 40000 });
   const nameInputs = page.locator('.gate__input');
   await nameInputs.nth(0).fill('Noah');
   await nameInputs.nth(1).fill('Lily');
