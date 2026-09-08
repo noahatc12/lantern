@@ -13,7 +13,7 @@
  *   WALK_PASS='...' node scripts/walkthrough.mjs
  */
 
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, devices } from 'playwright';
 
@@ -48,6 +48,9 @@ async function snap(page, name) {
 const txt = async (page, sel) => (await page.locator(sel).first().innerText()).trim();
 
 async function main() {
+  // Wipe first. Stale screenshots from an earlier run survive renumbering and
+  // get read as if they were current, which already caused one wrong reading.
+  await rm(OUT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
   const browser = await chromium.launch();
   const ctx = await browser.newContext({

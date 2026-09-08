@@ -18,7 +18,11 @@ const TIER_LABEL: Record<Tier, string> = {
 };
 
 export default function Home({ decks, names, maxTier, onPick, onTier, onNames }: Props) {
-  const visible = decks.filter((d) => d.tierRange[0] <= maxTier);
+  // Gentlest first, then alphabetical. Filesystem order put a tier-5 deck
+  // above a tier-1 one, which is a bad first impression of the whole app.
+  const visible = decks
+    .filter((d) => d.tierRange[0] <= maxTier)
+    .sort((a, b) => a.tierRange[0] - b.tierRange[0] || a.title.localeCompare(b.title));
 
   return (
     <main className="home">
@@ -46,6 +50,10 @@ export default function Home({ decks, names, maxTier, onPick, onTier, onNames }:
         </div>
         <p className="play__note">Set it together before you start. Either of you can lower it mid-game.</p>
       </section>
+
+      <p className="decks__count">
+        {visible.length} {visible.length === 1 ? 'game' : 'games'} at this ceiling
+      </p>
 
       <ul className="decks">
         {visible.map((d) => (
