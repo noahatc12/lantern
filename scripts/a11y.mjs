@@ -46,17 +46,46 @@ async function main() {
 
   await page.fill('.gate__input', PASS);
   await page.click('button[type="submit"]');
-  await page.waitForFunction(() => document.querySelectorAll('.gate__input').length === 2, { timeout: 40000 });
-  await scan(page, 'names');
+  await page.waitForSelector('.ob', { timeout: 40000 });
+  await scan(page, 'onboard-names');
 
-  const inputs = page.locator('.gate__input');
+  const inputs = page.locator('.ob .field');
   await inputs.nth(0).fill('Noah');
   await inputs.nth(1).fill('Lily');
-  await page.click('.btn--primary');
-  await page.waitForSelector('.decks', { timeout: 15000 });
-  await page.locator('.tier').nth(4).click();
-  await scan(page, 'home');
+  await page.locator('.ob__foot .btn--primary').click();
+  await page.waitForSelector('.ob .tiers__row', { timeout: 10000 });
+  await page.locator('.ob .tier').nth(4).click();
+  await scan(page, 'onboard-ceiling');
+  await page.locator('.ob__foot .btn--primary').click();
+  await page.waitForSelector('.ctrl--stop', { timeout: 10000 });
+  await scan(page, 'onboard-controls');
+  await page.locator('.ob__foot .btn--primary').click();
 
+  await page.waitForSelector('.tonight__head', { timeout: 15000 });
+  await scan(page, 'tonight');
+
+  const tabs = page.locator('.tabbtn');
+  const goShelf = async () => {
+    await tabs.nth(1).click();
+    await page.waitForSelector('.decks', { timeout: 10000 });
+  };
+  await goShelf();
+  await scan(page, 'shelf');
+
+  await tabs.nth(2).click();
+  await page.waitForSelector('.vault__head', { timeout: 10000 });
+  await scan(page, 'vault');
+
+  await tabs.nth(3).click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+  await scan(page, 'settings');
+  await page.locator('.row2', { hasText: 'Privacy' }).click();
+  await page.waitForSelector('.fact', { timeout: 10000 });
+  await scan(page, 'privacy');
+  await page.locator('.backbtn').click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+
+  await goShelf();
   await page.locator('.deckcard__title', { hasText: 'Truth or Dare' }).click();
   await page.waitForSelector('.rules', { timeout: 10000 });
   await scan(page, 'rules');
@@ -70,7 +99,7 @@ async function main() {
   await scan(page, 'card');
 
   await page.locator('.play__back').first().click();
-  await page.waitForSelector('.decks', { timeout: 10000 });
+  await goShelf();
   await page.locator('.deckcard__title', { hasText: 'Bucket List Match' }).click();
   await page.waitForSelector('.rules', { timeout: 10000 });
   await page.locator('.rules__actions .btn--primary').click();

@@ -30,6 +30,18 @@ function check(scenario, name, ok, detail = '') {
   console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? ` (${detail})` : ''}`);
 }
 
+/**
+ * The app opens on Tonight, so a scenario that wants the deck list has to walk
+ * there the way a person does. Kept in one place: every scenario below used to
+ * assume the first screen WAS the list, which stopped being true the moment
+ * that screen was split in two.
+ */
+async function shelf(page) {
+  await page.waitForSelector('.tabbar', { timeout: 20000 });
+  await page.locator('.tabbtn').nth(1).click();
+  await page.waitForSelector('.decks', { timeout: 15000 });
+}
+
 /** Boot with a given localStorage state already present. */
 async function withState(browser, state, fn, { expectUnlocked = true } = {}) {
   const ctx = await browser.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 } });
@@ -56,7 +68,7 @@ async function withState(browser, state, fn, { expectUnlocked = true } = {}) {
 
   if (expectUnlocked) {
     // A cached key should skip straight past the passphrase.
-    await page.waitForSelector('.decks, .gate__input', { timeout: 20000 });
+    await page.waitForSelector('.tabbar, .gate__input, .ob', { timeout: 20000 });
   }
 
   await fn(page, errors);
@@ -71,7 +83,7 @@ async function captureKey(browser) {
   await page.waitForSelector('.gate__input', { timeout: 20000 });
   await page.fill('.gate__input', PASS);
   await page.click('button[type="submit"]');
-  await page.waitForFunction(() => document.querySelectorAll('.gate__input').length === 2, { timeout: 40000 });
+  await page.waitForSelector('.ob, .tabbar', { timeout: 40000 });
   const key = await page.evaluate(() => localStorage.getItem('lantern.contentKey'));
   await ctx.close();
   return key;
@@ -85,7 +97,8 @@ async function main() {
   const unlocked = {
     'lantern.contentKey': key,
     'lantern.names': JSON.stringify(['Noah', 'Lily']),
-    'lantern.maxTier': '5',
+    'lantern.onboarded': 'true',
+    'lantern.defaultTier': '5',
   };
 
   // ---- 1. A deck already played to exhaustion -----------------------------
@@ -95,7 +108,7 @@ async function main() {
     browser,
     { ...unlocked, [`lantern.seen.${tod.id}`]: JSON.stringify(tod.cards.map((c) => c.id)) },
     async (page, errors) => {
-      await page.waitForSelector('.decks', { timeout: 15000 });
+      await shelf(page);
       await page.locator('.deckcard__title', { hasText: 'Truth or Dare' }).click();
       await page.waitForSelector('.rules', { timeout: 10000 });
       const body = await page.locator('.rules').innerText();
@@ -125,7 +138,7 @@ async function main() {
       }),
     },
     async (page, errors) => {
-      await page.waitForSelector('.decks', { timeout: 15000 });
+      await shelf(page);
       await page.locator('.deckcard__title', { hasText: 'Bucket List Match' }).click();
       await page.waitForSelector('.rules', { timeout: 10000 });
       const hasReview = (await page.locator('.rules__actions .btn--ghost').count()) > 0;
@@ -153,15 +166,19 @@ async function main() {
       ]),
     },
     async (page, errors) => {
-      await page.waitForSelector('.decks', { timeout: 15000 });
-      await page.locator('.deckcard__title', { hasText: 'The Vault' }).click();
-      await page.waitForSelector('.rules', { timeout: 10000 });
-      await page.locator('.rules__actions .btn--primary').click();
-      await page.waitForSelector('.vault', { timeout: 10000 });
-      const txt = await page.locator('.vault').innerText();
+      await page.waitForSelector('.tabbar', { timeout: 20000 });
+      await page.locator('.tabbtn').nth(2).click();
+      await page.waitForSelector('.ious', { timeout: 15000 });
+      const txt = await page.locator('.ious').innerText();
       check('vault', 'open items shown', /an hour, their choice/.test(txt));
-      check('vault', 'redeemed kept separate', /redeemed \(1\)/i.test(txt), txt.slice(0, 80));
-      check('vault', 'sealed item stays sealed', /sealed\./i.test(txt) && !/sealed one/.test(txt));
+      check('vault', 'redeemed items are marked, not hidden', /redeemed and gone/i.test(txt), txt.slice(0, 90));
+      check('vault', 'a redeemed item cannot be redeemed twice', (await page.locator('.btn--redeem').count()) === 1);
+      check('vault', 'sealed item stays sealed', /sealed until/i.test(txt) && !/sealed one/.test(txt));
+      check(
+        'vault',
+        'a sealed item offers no way to open it early',
+        (await page.locator('.iou--sealed .btn--redeem').count()) === 0,
+      );
       check('vault', 'no errors', errors.length === 0, errors.join('|'));
     },
   );
@@ -184,24 +201,26 @@ async function main() {
       check('corrupt', 'falls back to the passphrase prompt', true);
       await page.fill('.gate__input', PASS);
       await page.click('button[type="submit"]');
-      await page.waitForSelector('.gate__title, .decks', { timeout: 40000 });
+      await page.waitForSelector('.ob, .tabbar', { timeout: 40000 });
 
-      const needsNames = (await page.locator('.gate__title').count()) > 0;
+      const needsNames = (await page.locator('.ob').count()) > 0;
       check('corrupt', 'bad names are discarded and re-asked', needsNames);
       if (needsNames) {
-        const inputs = page.locator('.gate__input');
+        const inputs = page.locator('.ob .field');
         await inputs.nth(0).fill('Noah');
         await inputs.nth(1).fill('Lily');
-        await page.click('.btn--primary');
+        await page.locator('.ob__foot .btn--primary').click();
+        await page.waitForSelector('.ob .tiers__row', { timeout: 10000 });
+        await page.locator('.ob__foot .btn--primary').click();
+        await page.waitForSelector('.ctrl--stop', { timeout: 10000 });
+        await page.locator('.ob__foot .btn--primary').click();
       }
-      await page.waitForSelector('.decks', { timeout: 15000 });
+      await page.waitForSelector('.tonight__head', { timeout: 15000 });
       const tier = await page.locator('.tier.is-on .tier__n').innerText();
       check('corrupt', 'bad tier falls back to a valid one', /^[1-5]$/.test(tier.trim()), tier);
 
-      await page.locator('.deckcard__title', { hasText: 'The Vault' }).click();
-      await page.waitForSelector('.rules', { timeout: 10000 });
-      await page.locator('.rules__actions .btn--primary').click();
-      await page.waitForSelector('.vault', { timeout: 10000 });
+      await page.locator('.tabbtn').nth(2).click();
+      await page.waitForSelector('.vault__head', { timeout: 10000 });
       check('corrupt', 'malformed vault items do not crash the vault', true);
       check('corrupt', 'no errors anywhere', errors.length === 0, errors.join('|'));
     },
@@ -211,7 +230,7 @@ async function main() {
   // ---- 5. Reload in the middle of a game -----------------------------------
   console.log('\nscenario: reload mid-game');
   await withState(browser, unlocked, async (page, errors) => {
-    await page.waitForSelector('.decks', { timeout: 15000 });
+    await shelf(page);
     await page.locator('.deckcard__title', { hasText: 'Truth or Dare' }).click();
     await page.waitForSelector('.rules', { timeout: 10000 });
     await page.locator('.rules__actions .btn--primary').click();
@@ -220,9 +239,9 @@ async function main() {
     await page.waitForSelector('.card', { timeout: 10000 });
 
     await page.reload({ waitUntil: 'networkidle' });
-    await page.waitForSelector('.decks, .gate__input', { timeout: 20000 });
-    const landedHome = (await page.locator('.decks').count()) > 0;
-    check('reload', 'recovers to the game list, still unlocked', landedHome);
+    await page.waitForSelector('.tabbar, .gate__input', { timeout: 20000 });
+    const landedHome = (await page.locator('.tonight__head').count()) > 0;
+    check('reload', 'recovers to Tonight, still unlocked', landedHome);
     check('reload', 'scroll is at the top after reload', (await page.evaluate(() => window.scrollY)) === 0);
     check('reload', 'no errors', errors.length === 0, errors.join('|'));
   });
@@ -249,7 +268,7 @@ async function main() {
       // Recovery actually recovers.
       await page.evaluate(() => localStorage.removeItem('lantern.__crashtest'));
       await page.locator('.btn--primary').click();
-      await page.waitForSelector('.decks', { timeout: 20000 });
+      await page.waitForSelector('.tabbar', { timeout: 20000 });
       check('crash', 'reload returns to a working app', true);
     },
     { expectUnlocked: false },

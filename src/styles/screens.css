@@ -1,0 +1,1025 @@
+/* =========================================================================
+   Screens ported from the Claude Design canvas (design/Lantern App.dc.html).
+   Values are taken from the canvas rather than adjusted toward it.
+   ========================================================================= */
+
+.screen {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: calc(var(--safe-top) + 58px) 20px calc(var(--safe-bottom) + 24px);
+  max-width: 620px;
+  margin: 0 auto;
+  animation: screenIn var(--t-mid) var(--ease) both;
+}
+
+.screen--center {
+  display: flex;
+  flex-direction: column;
+  padding-left: 26px;
+  padding-right: 26px;
+  text-align: center;
+}
+
+.h1 {
+  margin: 0 0 22px;
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.024em;
+  line-height: 1.2;
+}
+
+.h1--big {
+  font-size: 30px;
+  letter-spacing: -0.026em;
+}
+
+.lede {
+  margin: 0 0 22px;
+  color: var(--ink-quiet);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.backbtn {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 19px;
+}
+
+/* ---------- onboarding ---------- */
+
+.ob {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--safe-top) + 58px) 26px calc(var(--safe-bottom) + 28px);
+  max-width: 620px;
+  margin: 0 auto;
+  animation: screenIn var(--t-slow) var(--ease) both;
+}
+
+.ob__dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: auto;
+}
+
+.ob__dot {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  transition: background var(--t-mid) var(--ease);
+}
+
+.ob__dot.is-on {
+  background: var(--accent);
+}
+
+.ob__title {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.ob__body {
+  margin: 0 0 24px;
+  color: var(--ink-quiet);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.ob__foot {
+  margin-top: auto;
+  padding-top: 26px;
+  display: flex;
+  gap: 10px;
+}
+
+.ob__foot .btn--primary {
+  flex: 1;
+}
+
+.field {
+  min-height: 54px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-1);
+  color: var(--ink);
+  font-size: 17px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The two controls, explained during onboarding rather than discovered
+   mid-session, which is the only time they matter. */
+.ctrl {
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius);
+}
+
+.ctrl--ease {
+  border: 1px solid var(--accent-line);
+  background: rgb(220 174 88 / 0.05);
+}
+
+.ctrl--stop {
+  border: 1px solid var(--bad-line);
+  background: rgb(221 122 99 / 0.05);
+}
+
+.ctrl__chip {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  flex: none;
+}
+
+.ctrl--ease .ctrl__chip {
+  border: 1px solid var(--accent-line-strong);
+  color: #e8c86c;
+}
+
+.ctrl--stop .ctrl__chip {
+  border: 1px solid var(--bad-line-strong);
+  color: var(--bad);
+}
+
+.ctrl__text {
+  color: var(--ink-mid);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* ---------- tonight ---------- */
+
+.tonight__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.tonight__name {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 19px;
+  color: var(--ink-mid);
+}
+
+.tonight__clock {
+  color: var(--ink-dim);
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.greeting {
+  margin: 0 0 22px;
+  font-family: var(--serif);
+  font-size: 27px;
+  line-height: 1.22;
+  letter-spacing: -0.024em;
+  text-wrap: balance;
+}
+
+.resume {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: rgb(220 174 88 / 0.06);
+  color: var(--ink);
+  text-align: left;
+}
+
+.resume__eyebrow {
+  display: block;
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.resume__title {
+  display: block;
+  font-family: var(--serif);
+  font-size: 19px;
+}
+
+.resume__meta {
+  display: block;
+  color: var(--ink-quiet);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+/* The one suggested game. Deliberately larger than a shelf card: this screen
+   answers the question with an answer, not with a list. */
+.suggest {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 22px 22px 22px 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--ink);
+  text-align: left;
+}
+
+.suggest::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22px;
+  bottom: 22px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  opacity: 0.85;
+  background: var(--engine, var(--accent));
+}
+
+.suggest__title {
+  position: relative;
+  font-family: var(--serif);
+  font-size: 28px;
+  line-height: 1.12;
+  letter-spacing: -0.026em;
+}
+
+.suggest__blurb {
+  position: relative;
+  color: var(--ink-mid);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.chips {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  color: var(--ink-quiet);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pairbtns {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pairbtns .btn {
+  flex: 1;
+  min-height: 52px;
+  font-size: 14.5px;
+}
+
+.guardrails {
+  margin-top: 30px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--panel-1);
+}
+
+.guard {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 9px;
+}
+
+.guard:last-child {
+  margin-bottom: 0;
+}
+
+.guard__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+  margin-top: 6px;
+}
+
+.guard__text {
+  color: var(--ink-mid);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- shelf ---------- */
+
+.search {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.search__input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel-1);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.search__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* One row that scrolls, rather than two rows that wrap. Wrapping put a single
+   orphaned chip on its own line at 390px and pushed the first band down with
+   it. Negative margins so the row can bleed to the screen edges and read as
+   scrollable rather than as a boxed-in strip. */
+.filters {
+  display: flex;
+  gap: 7px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -20px 22px;
+  padding: 0 20px 2px;
+}
+
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filter {
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.filter.is-on {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.locked {
+  margin-top: 6px;
+  padding: 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.locked__list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.locked__row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.locked__title {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--ink-dim);
+}
+
+.locked__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line-soft);
+}
+
+.locked__meta {
+  color: var(--ink-dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.btn--accent-ghost {
+  border-color: var(--accent-line);
+  background: var(--accent-ghost);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+/* ---------- settings ---------- */
+
+.rows {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 26px;
+}
+
+.row2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 18px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: var(--panel-1);
+  color: var(--ink);
+  font-size: 15.5px;
+  text-align: left;
+}
+
+.row2:first-child {
+  border-top: 0;
+}
+
+.row2__label {
+  flex: 1;
+}
+
+.row2__value {
+  color: var(--ink-quiet);
+  font-size: 13.5px;
+}
+
+.card--danger {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 18px;
+  border: 1px solid var(--bad-line);
+  border-radius: var(--radius);
+  background: rgb(221 122 99 / 0.05);
+  color: var(--bad);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.btn--danger {
+  border: 0;
+  background: var(--bad);
+  color: #210b07;
+  font-weight: 700;
+}
+
+.foot {
+  margin: 22px 0 0;
+  color: var(--ink-dim);
+  font-size: 11.5px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* ---------- props ---------- */
+
+.prop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 15.5px;
+  text-align: left;
+  width: 100%;
+}
+
+.prop.is-on {
+  border-color: var(--ok-line);
+  background: rgb(111 175 132 / 0.07);
+  color: var(--ink);
+}
+
+.prop__label {
+  flex: 1;
+}
+
+.prop__mark {
+  color: var(--ink-dim);
+  font-size: 15px;
+}
+
+.prop.is-on .prop__mark {
+  color: var(--ok);
+}
+
+/* ---------- privacy ---------- */
+
+.fact {
+  padding: 16px 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--panel-1);
+}
+
+.fact__label {
+  margin: 0 0 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fact__label--ok {
+  color: var(--ok);
+}
+
+.fact__label--warn {
+  color: var(--bad);
+}
+
+.fact__text {
+  margin: 0;
+  color: var(--ink-mid);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* ---------- vault, canvas refinements ---------- */
+
+.iou--sealed {
+  border-left-color: var(--line-strong);
+}
+
+.iou__state {
+  color: var(--ink-quiet);
+  font-size: 12.5px;
+}
+
+.iou__state--done {
+  color: var(--ok);
+}
+
+.btn--redeem {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--ok-solid);
+  color: var(--on-ok);
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.emptybox {
+  padding: 28px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.emptybox__title {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: 19px;
+  color: var(--ink-mid);
+}
+
+.emptybox__text {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ---------- tab bar ---------- */
+
+/* Fixed, so the four places stay one tap away however far down a shelf you
+   have scrolled. Screens pay for it with bottom padding rather than the bar
+   floating over the last row of content. */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  border-top: 1px solid var(--line);
+  background: var(--panel-deep);
+  padding-bottom: calc(var(--safe-bottom) + 6px);
+}
+
+.tabbtn {
+  flex: 1;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  padding: 8px 0 0;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.tabbtn:active {
+  opacity: 0.6;
+}
+
+.tabbtn__rule {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+
+.tabbtn.is-on .tabbtn__rule {
+  background: var(--accent);
+}
+
+.tabbtn.is-on {
+  color: var(--ink);
+}
+
+.tabbtn__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tabbtn__label {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+
+/* Room for the bar. Without this the last row of every tab screen sits under
+   it and is unreachable, which is the classic fixed-footer bug. */
+.screen {
+  padding-bottom: calc(var(--safe-bottom) + 108px);
+}
+
+/* ---------- vault, canvas layout ---------- */
+
+.vault__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.btn--pill {
+  min-height: 44px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--accent-line);
+  border-radius: 18px;
+  background: var(--accent-ghost);
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ious {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ious .iou {
+  padding: 18px 18px 16px;
+  border-radius: 16px;
+  background: var(--panel-2);
+}
+
+.ious .iou__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.iou__delete {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-dim);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.iou__delete:active {
+  color: var(--bad);
+}
+
+.seals {
+  display: flex;
+  gap: 8px;
+}
+
+.seals .filter {
+  flex: 1;
+  min-height: 48px;
+  justify-content: center;
+  text-align: center;
+}
+
+.answer--vault {
+  margin-bottom: 22px;
+  border-radius: 16px;
+  background: var(--panel-1);
+  border-color: var(--line-strong);
+  font-family: var(--serif);
+  resize: none;
+}
+
+.btn--pick {
+  flex: 1;
+  min-height: 52px;
+  border-radius: 26px;
+  font-weight: 600;
+}
+
+.btn--pick.is-on {
+  border-color: var(--accent);
+  background: var(--accent-ghost);
+  color: var(--ink);
+}
+
+/* Saved match results. A list of separate cards rather than the flush rows
+   used in settings, because these are things you open, not settings you set. */
+.rows--gap {
+  list-style: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  margin: 0 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row2--card {
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  padding: 15px 16px;
+  min-height: 56px;
+  background: var(--panel-1);
+}
+
+.rows--gap .row2--card {
+  border-top: 1px solid var(--line-soft);
+}
+
+.saved__title {
+  display: block;
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.saved__meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+
+.saved__count {
+  color: var(--ok);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prop__gates {
+  color: var(--ink-dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the floor: ease off and stop ---------- */
+
+/* Fixed, and on every play screen. It used to be a floating pair of pills that
+   only the draw engine rendered, and only above tier 3, so the promise made
+   during onboarding was true of one game in ten. */
+.floor {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px calc(var(--safe-bottom) + 12px);
+  border-top: 1px solid var(--line);
+  background: var(--panel-deep);
+}
+
+.floor__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-dim);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.floor__btn {
+  min-height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.floor__btn:active {
+  opacity: 0.6;
+}
+
+.floor__btn--ease {
+  border-color: var(--accent-line);
+  color: #c9a95e;
+}
+
+.floor__btn--stop {
+  border-color: #3b241f;
+  color: var(--bad);
+}
+
+/* Room for it, on top of what the play screen already reserved. */
+.play {
+  padding-bottom: calc(var(--safe-bottom) + 96px);
+}
+
+/* ---------- rules, canvas layout ---------- */
+
+.play--rules .play__back--solo {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.play--rules .rules__summary {
+  font-size: 28px;
+  line-height: 1.24;
+  letter-spacing: -0.022em;
+  margin-bottom: 8px;
+}
+
+.play--rules .rules__blurb {
+  margin-bottom: 18px;
+}
+
+/* Numbered and ruled. A bullet list implies the steps are interchangeable;
+   in most of these games they are not. */
+.rules__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.step__n {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+
+.step__text {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-mid);
+}
+
+.play--rules .rules__example {
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  border: 0;
+  border-left: 2px solid var(--accent);
+  border-radius: 0 14px 14px 0;
+  background: var(--panel-1);
+}
+
+.play--rules .rules__example .eyebrow {
+  margin-bottom: 8px;
+}
+
+.rules__toggle {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.play--rules .rules__notes {
+  margin: 2px 0 0;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--ink-quiet);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.play--rules .rules__actions {
+  margin-top: 28px;
+}
+
+/* ---------- the card ---------- */
+
+/* Whose turn it is, at the size the canvas gives it. It is read across a room
+   and from a phone lying on a bed, not from a monitor. */
+.play__turn {
+  font-size: 48px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}

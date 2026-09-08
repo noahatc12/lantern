@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Deck, Tier } from '../types';
+import { playable } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -19,13 +20,13 @@ interface Props {
   deck: Deck & { rungs?: number; rule?: string };
   names: [string, string];
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
-export default function LadderGame({ deck, names, maxTier, onExit }: Props) {
-  const rungs = [...deck.cards]
+export default function LadderGame({ deck, names, maxTier, availableProps, onExit }: Props) {
+  const rungs = playable(deck.cards, maxTier, availableProps)
     .map((c) => c as typeof c & { rung?: number })
-    .filter((c) => c.tier <= maxTier)
     .sort((a, b) => (a.rung ?? 0) - (b.rung ?? 0));
 
   const [started, setStarted] = useState(false);

@@ -51,7 +51,7 @@ async function snap(page, name) {
   const m = await page.evaluate(() => {
     const el = document.documentElement;
     const first = document.querySelector(
-      '.play__top, .home__top, .gate__title, .stopped__title, .handoff__eyebrow',
+      '.play__top, .tonight__head, .h1, .ob__dots, .gate__title, .stopped__title, .handoff__eyebrow',
     );
     const r = first ? first.getBoundingClientRect() : null;
     return {
@@ -110,27 +110,79 @@ async function main() {
 
   await page.fill('.gate__input', PASS);
   await page.click('button[type="submit"]');
-  await page.waitForFunction(() => document.querySelectorAll('.gate__input').length === 2, { timeout: 40000 });
+  await page.waitForSelector('.ob, .tabbar', { timeout: 40000 });
 
-  // ---------- names ----------
-  const inputs = page.locator('.gate__input');
+  // ---------- onboarding ----------
+  await page.waitForSelector('.ob', { timeout: 40000 });
+  await snap(page, 'onboard-names');
+  const nextDisabled = await page.locator('.ob__foot .btn--primary').isDisabled();
+  check('onboarding will not advance without two names', nextDisabled);
+
+  const inputs = page.locator('.ob .field');
   await inputs.nth(0).fill('Noah');
   await inputs.nth(1).fill('Lily');
-  await snap(page, 'names');
-  await page.click('.btn--primary');
-  await page.waitForSelector('.decks', { timeout: 15000 });
+  await page.locator('.ob__foot .btn--primary').click();
 
-  // ---------- home ----------
-  await snap(page, 'home-default');
+  await page.waitForSelector('.ob .tiers__row', { timeout: 10000 });
+  check('onboarding explains the ceiling before anything is played', true);
+  await snap(page, 'onboard-ceiling');
+  await page.locator('.ob .tier').nth(4).click();
+  await page.locator('.ob__foot .btn--primary').click();
+
+  await page.waitForSelector('.ctrl--stop', { timeout: 10000 });
+  const controls = await txt(page, '.ob');
+  check(
+    'onboarding explains that stopping is never attributed',
+    /(never|not|neither)[^.]{0,40}attributed/i.test(controls),
+  );
+  await snap(page, 'onboard-controls');
+  await page.locator('.ob__foot .btn--primary').click();
+
+  // ---------- tonight ----------
+  await page.waitForSelector('.suggest, .tonight__head', { timeout: 15000 });
+  await snap(page, 'tonight');
   const atTier = async () => (await page.locator('.tier.is-on .tier__n').innerText()).trim();
-  check('a tier is selected by default', (await atTier()).length > 0);
+  check('the ceiling chosen during onboarding carries through', (await atTier()) === '5');
+  check('tonight offers exactly one suggestion', (await page.locator('.suggest').count()) === 1);
+  const guardrails = await txt(page, '.guardrails');
+  check('tonight states its guardrails', /ease off/i.test(guardrails));
 
-  await page.locator('.tier').nth(0).click();
+  const tabs = page.locator('.tabbtn');
+  check('there are four places', (await tabs.count()) === 4, String(await tabs.count()));
+
+  const setTier = async (n) => {
+    await tabs.nth(0).click();
+    await page.waitForSelector('.tiers__row', { timeout: 10000 });
+    await page.locator('.tiers .tier').nth(n - 1).click();
+    await page.waitForTimeout(80);
+  };
+  const goShelf = async () => {
+    await tabs.nth(1).click();
+    await page.waitForSelector('.decks, .locked', { timeout: 10000 });
+  };
+
+  // ---------- the shelf ----------
+  await setTier(1);
+  await goShelf();
   const fewer = await page.locator('.deckcard').count();
-  await page.locator('.tier').nth(4).click();
+  const lockedShown = (await page.locator('.locked').count()) > 0;
+  check('what sits above the ceiling is named rather than hidden', lockedShown);
+  await snap(page, 'shelf-tier1');
+
+  await setTier(5);
+  await goShelf();
   const more = await page.locator('.deckcard').count();
   check('raising the ceiling reveals more decks', more > fewer, `${fewer} -> ${more}`);
-  await snap(page, 'home-tier5');
+  await snap(page, 'shelf-tier5');
+
+  // Search narrows, and clears cleanly.
+  await page.locator('.search__input').fill('kiss');
+  await page.waitForTimeout(150);
+  const searched = await page.locator('.deckcard').count();
+  check('search narrows the shelf', searched > 0 && searched < more, `${more} -> ${searched}`);
+  await page.locator('.search__input').fill('');
+  await page.waitForTimeout(150);
+  check('clearing search restores the shelf', (await page.locator('.deckcard').count()) === more);
 
   const open = async (title) => {
     // Scroll first, the way a person browsing the list actually would.
@@ -142,7 +194,8 @@ async function main() {
   const home = async () => {
     const b = page.locator('.play__back');
     if (await b.count()) await b.first().click();
-    await page.waitForSelector('.decks', { timeout: 10000 });
+    await page.waitForSelector('.decks, .tabbar', { timeout: 10000 });
+    if ((await page.locator('.decks').count()) === 0) await goShelf();
   };
 
   // ---------- scroll: forward to top, back restores ----------
@@ -178,16 +231,21 @@ async function main() {
     'The Ask',
   ]) {
     await open(title);
+    // Snapshot the screen as it OPENS, before anything is clicked. Playwright
+    // scrolls an element into view before clicking it, so counting the notes
+    // first would move the page and then the harness would report its own
+    // scrolling as the app opening scrolled.
+    await snap(page, `rules-${title.toLowerCase().replace(/[^a-z]+/g, '-')}`);
     const steps = await page.locator('.rules__steps li').count();
-    const notes = await page.locator('.rules__notes li').count();
     const summary = await txt(page, '.rules__summary');
     const hasExample = (await page.locator('.rules__example p').count()) > 0;
+    await page.locator('.rules__toggle').click();
+    const notes = await page.locator('.rules__notes li').count();
     check(
       `${title}: has instructions`,
       steps >= 3 && notes >= 2 && summary.length > 20 && hasExample,
       `${steps} steps, ${notes} notes, example=${hasExample}`,
     );
-    await snap(page, `rules-${title.toLowerCase().replace(/[^a-z]+/g, '-')}`);
     await home();
   }
 
@@ -227,25 +285,55 @@ async function main() {
   check('ladder climbs during a session', climbed !== 'tier 1', `ended at ${climbed}`);
   await snap(page, 'tod-climbed');
 
-  // Stop controls appear once it is explicit.
+  // The floor. Present on every play screen at every tier, not only where one
+  // engine happened to render it.
   await page.locator('.play__choices .btn').first().click();
   await page.waitForSelector('.card');
-  const hasStop = (await page.locator('.tl__btn--red').count()) > 0;
-  check('stop controls present at tier 4 and above', hasStop);
-  if (hasStop) {
-    await snap(page, 'tod-stopcontrols');
-    await page.locator('.tl__btn--red').click();
-    await page.waitForSelector('.stopped__title');
-    const stopped = await txt(page, '.stopped__title');
-    check('red ends the session in one tap', stopped.toLowerCase().includes('stopped'));
-    const body = await txt(page, '.stopped__body');
-    check('stop screen does not attribute who stopped it', !/noah|lily/i.test(body));
-    await snap(page, 'tod-stopped');
-    await page.locator('.stopped .btn').click();
-    await page.waitForSelector('.decks', { timeout: 10000 });
-  } else {
+  check('stop is present while a card is up', (await page.locator('.floor__btn--stop').count()) === 1);
+  check('ease off is present alongside it', (await page.locator('.floor__btn--ease').count()) === 1);
+  await snap(page, 'tod-stopcontrols');
+
+  // Ease off must actually lower the ceiling, not just say so. Read it off
+  // Tonight rather than off the play screen: Truth or Dare runs the ladder, so
+  // its displayed tier is min(rung, ceiling) and can be unchanged by a drop
+  // that did happen. Asserting the visible number there would have been a test
+  // that passes when the feature is broken and fails when it works.
+  await page.locator('.floor__btn--ease').click();
+  await page.waitForTimeout(200);
+
+  await page.locator('.floor__btn--stop').click();
+  await page.waitForSelector('.stopped__title');
+  const stopped = await txt(page, '.stopped__title');
+  check('stop ends the session in one tap', stopped.toLowerCase().includes('stopped'));
+  const body = await txt(page, '.stopped__body');
+  check('stop screen does not attribute who stopped it', !/noah|lily/i.test(body));
+  await snap(page, 'tod-stopped');
+  await page.locator('.stopped .btn').click();
+  await home();
+
+  await tabs.nth(0).click();
+  await page.waitForSelector('.tiers__row', { timeout: 10000 });
+  const ceilingAfterEase = await atTier();
+  check(
+    'ease off lowered tonight’s ceiling for the rest of the session',
+    ceilingAfterEase === '4',
+    `ceiling is now ${ceilingAfterEase}, expected 4`,
+  );
+  await setTier(5);
+  await goShelf();
+
+  // Every engine, not just this one. The claim onboarding makes is universal,
+  // so the check is too.
+  for (const title of ['Rate the Scenario', 'The Long Kiss', 'Bucket List Match', 'Touch Dice']) {
+    await open(title);
+    check(
+      `${title}: stop is on the play screen`,
+      (await page.locator('.floor__btn--stop').count()) === 1,
+    );
     await home();
   }
+  await setTier(5);
+  await goShelf();
 
   // ---------- Bucket List Match: full run ----------
   await open('Bucket List Match');
@@ -376,7 +464,7 @@ async function main() {
   check('end screen never says who stopped it', !/noah|lily/i.test(endText));
   await snap(page, 'ladder-ended');
   await page.locator('.stopped .btn').click();
-  await page.waitForSelector('.decks', { timeout: 10000 });
+  await home();
 
   // ---------- Compare ----------
   await open('One Question');
@@ -445,24 +533,59 @@ async function main() {
   await home();
 
   // ---------- Vault ----------
-  await open('The Vault');
-  await page.locator('.rules__actions .btn--primary').click();
-  await page.waitForSelector('.vault');
-  await page.locator('.vault .btn--primary').click();
-  await page.waitForSelector('.answer');
-  await page.locator('.answer').fill('one hour, no phones, their choice');
-  await page.locator('.play__stage--form .btn--primary').click();
-  await page.waitForSelector('.iou');
+  // Reached as a place, not as a deck. An IOU written three weeks ago has to be
+  // visible without either of you remembering which game produced it.
+  await tabs.nth(2).click();
+  await page.waitForSelector('.vault__head', { timeout: 10000 });
+  check('the vault is one tap from anywhere', true);
+  check('an empty vault says so', (await page.locator('.emptybox').count()) === 1);
+  await snap(page, 'vault-empty');
+
+  await page.locator('.btn--pill').click();
+  await page.waitForSelector('.answer--vault', { timeout: 10000 });
+  const saveDisabled = await page.locator('.screen > .btn--primary').isDisabled();
+  check('an empty promise cannot be saved', saveDisabled);
+  await page.locator('.answer--vault').fill('one hour, no phones, their choice');
+  await page.locator('.screen > .btn--primary').click();
+  await page.waitForSelector('.iou', { timeout: 10000 });
   check('a written promise appears in the vault', (await page.locator('.iou').count()) === 1);
   await snap(page, 'vault-list');
-  await page.locator('.iou .btn--primary').click();
+
+  // A sealed one must actually be sealed: no text, no redeem.
+  await page.locator('.btn--pill').click();
+  await page.waitForSelector('.answer--vault', { timeout: 10000 });
+  await page.locator('.answer--vault').fill('a whole saturday, your plan');
+  await page.locator('.seals .filter').nth(2).click();
+  await page.locator('.screen > .btn--primary').click();
+  await page.waitForSelector('.iou--sealed', { timeout: 10000 });
+  const sealed = await txt(page, '.iou--sealed');
+  check('a sealed promise hides its text', !/saturday/i.test(sealed), sealed.slice(0, 60));
+  check('a sealed promise offers no way to open it early', /opens in/i.test(sealed));
+  check(
+    'sealing one does not seal the other',
+    (await page.locator('.iou:not(.iou--sealed) .btn--redeem').count()) === 1,
+  );
+  await snap(page, 'vault-sealed');
+
+  await page.locator('.btn--redeem').click();
   await page.waitForTimeout(200);
-  const stillOpen = await page.locator('.iou').count();
-  check('redeeming moves it out of the open list', stillOpen === 0, `${stillOpen} still open`);
-  const redeemed = await txt(page, '.vault');
-  check('redeemed items are still readable', /redeemed/i.test(redeemed));
+  const redeemed = await txt(page, '.ious');
+  check('redeeming is recorded rather than hiding the item', /redeemed/i.test(redeemed));
+  check('redeeming removes the way to redeem again', (await page.locator('.btn--redeem').count()) === 0);
   await snap(page, 'vault-redeemed');
-  await home();
+
+  // Saved match results live here too, not buried in the deck that made them.
+  const savedResults = await page.locator('.row2--card').count();
+  check('a saved match result is reachable from the vault', savedResults >= 1, `${savedResults} saved`);
+  if (savedResults > 0) {
+    await page.locator('.row2--card').first().click();
+    await page.waitForSelector('.result__head', { timeout: 10000 });
+    check('opening a saved result shows the overlap', true);
+    await snap(page, 'vault-saved-result');
+    await page.locator('.backbtn').click();
+    await page.waitForSelector('.vault__head', { timeout: 10000 });
+  }
+  await goShelf();
 
   // ---------- Endurance ----------
   await open('First to Break');
@@ -481,9 +604,83 @@ async function main() {
   check('giving in ends the game with a named outcome', /broke first|draw/i.test(endur));
   await snap(page, 'endurance-over');
   await page.locator('.stopped .btn').click();
-  await page.waitForSelector('.decks', { timeout: 10000 });
+  await home();
   const finalCount = await page.locator('.deckcard').count();
-  check('every deck is reachable from home', finalCount >= 29, `${finalCount} decks listed`);
+  check('every deck is reachable from the shelf', finalCount >= 29, `${finalCount} decks listed`);
+
+  // ---------- the ceiling applies to sorting decks ----------
+  // This engine sorted the whole deck regardless of the ceiling, so a deck
+  // spanning tiers 3 to 5 dealt its tier-5 cards at a ceiling of 3. Onboarding
+  // promises nothing above the ceiling is drawn; that promise is the thing the
+  // whole safety layer rests on, so it gets an assertion of its own.
+  const sortSize = async () => {
+    await open('Yes / No / Maybe');
+    const note = await txt(page, '.play__note');
+    await home();
+    return Number((note.match(/(\d+)/) ?? [])[1] ?? 0);
+  };
+  await setTier(5);
+  await goShelf();
+  const atFive = await sortSize();
+  await setTier(3);
+  await goShelf();
+  const atThree = await sortSize();
+  check(
+    'the ceiling applies to sorting decks, not just drawn ones',
+    atThree > 0 && atThree < atFive,
+    `${atFive} cards at tier 5 vs ${atThree} at tier 3`,
+  );
+  await setTier(5);
+  await goShelf();
+
+  // ---------- props actually filter ----------
+  // The settings toggle used to be decorative. If it does not change what a
+  // deck can deal, it is a control that lies about what tonight will contain.
+  const builderOptions = async () => {
+    await open('Touch Dice');
+    const note = await txt(page, '.play__note');
+    await home();
+    return Number((note.match(/,\s*(\d+)\s*options/) ?? [])[1] ?? 0);
+  };
+  const withoutProps = await builderOptions();
+  await tabs.nth(3).click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+  await page.locator('.row2', { hasText: 'to hand' }).click();
+  await page.waitForSelector('.prop', { timeout: 10000 });
+  const propCount = await page.locator('.prop').count();
+  check('the props list is derived from the content', propCount > 0, `${propCount} props`);
+  await snap(page, 'settings-props');
+  for (let i = 0; i < propCount; i++) await page.locator('.prop').nth(i).click();
+  await page.waitForTimeout(120);
+  await goShelf();
+  const withProps = await builderOptions();
+  check(
+    'having the props to hand puts more options in play',
+    withProps > withoutProps,
+    `${withoutProps} -> ${withProps}`,
+  );
+
+  // ---------- settings ----------
+  await tabs.nth(3).click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+  await snap(page, 'settings');
+  await page.locator('.row2', { hasText: 'Privacy' }).click();
+  await page.waitForSelector('.fact', { timeout: 10000 });
+  const privacy = await txt(page, '.screen');
+  check('privacy states what is written down', /what is written down/i.test(privacy));
+  check('privacy states that a No is never recorded', /never a No/i.test(privacy));
+  await snap(page, 'settings-privacy');
+  await page.locator('.backbtn').click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+
+  await page.locator('.card--danger').click();
+  await page.waitForSelector('.btn--danger', { timeout: 10000 });
+  const eraseText = await txt(page, '.screen');
+  check('erase says exactly what goes', /no bin and no undo/i.test(eraseText));
+  await snap(page, 'settings-erase');
+  await page.locator('.btn', { hasText: 'Keep it' }).click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+  check('keeping it returns to settings without erasing', true);
 
   await browser.close();
 

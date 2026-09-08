@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { Deck, Tier } from '../types';
+import { playable } from '../lib/deck';
+import Empty from '../components/Empty';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
@@ -19,6 +21,7 @@ interface Props {
   deck: Deck & { slotCount?: number };
   names: [string, string];
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
@@ -30,9 +33,9 @@ type Phase =
   | { step: 'guess'; slots: string[]; real: number }
   | { step: 'reveal'; slots: string[]; real: number; picked: number };
 
-export default function PredictGame({ deck, names, maxTier, onExit }: Props) {
+export default function PredictGame({ deck, names, maxTier, availableProps, onExit }: Props) {
   const slotCount = deck.slotCount ?? 3;
-  const pool = deck.cards.filter((c) => c.tier <= maxTier);
+  const pool = playable(deck.cards, maxTier, availableProps);
 
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });
   const [writer, setWriter] = useState<0 | 1>(0);
@@ -55,6 +58,10 @@ export default function PredictGame({ deck, names, maxTier, onExit }: Props) {
   );
 
   useScreenTop(phase.step);
+
+  // Same as the sorting engines: the ceiling can fall out from under a round
+  // that is already open, and indexing an empty pool threw rather than saying so.
+  if (!prompt) return <Empty onExit={onExit} />;
 
   if (phase.step === 'rules') {
     return <Rules deck={deck} onExit={onExit} onStart={() => setPhase({ step: 'prompt' })} />;

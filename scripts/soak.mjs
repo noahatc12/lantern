@@ -47,17 +47,27 @@ async function main() {
   await page.waitForSelector('.gate__input', { timeout: 20000 });
   await page.fill('.gate__input', PASS);
   await page.click('button[type="submit"]');
-  await page.waitForFunction(() => document.querySelectorAll('.gate__input').length === 2, {
-    timeout: 40000,
-  });
-  const inputs = page.locator('.gate__input');
+  await page.waitForSelector('.ob', { timeout: 40000 });
+
+  const inputs = page.locator('.ob .field');
   await inputs.nth(0).fill('Noah');
   await inputs.nth(1).fill('Lily');
-  await page.click('.btn--primary');
-  await page.waitForSelector('.decks', { timeout: 15000 });
-  await page.locator('.tier').nth(4).click();
+  await page.locator('.ob__foot .btn--primary').click();
+  await page.waitForSelector('.ob .tiers__row', { timeout: 10000 });
+  await page.locator('.ob .tier').nth(4).click();
+  await page.locator('.ob__foot .btn--primary').click();
+  await page.waitForSelector('.ctrl--stop', { timeout: 10000 });
+  await page.locator('.ob__foot .btn--primary').click();
+  await page.waitForSelector('.tabbar', { timeout: 15000 });
+
+  const shelf = async () => {
+    await page.locator('.tabbtn').nth(1).click();
+    await page.waitForSelector('.decks', { timeout: 15000 });
+  };
+  await shelf();
 
   const openDeck = async () => {
+    if ((await page.locator('.decks').count()) === 0) await shelf();
     await page.locator('.deckcard__title', { hasText: 'Truth or Dare' }).click();
     await page.waitForSelector('.rules', { timeout: 10000 });
     await page.locator('.rules__actions .btn--primary').click();
@@ -92,7 +102,7 @@ async function main() {
     if (i === Math.floor(TOTAL / 3)) {
       reloadedAt = i + 1;
       await page.reload({ waitUntil: 'networkidle' });
-      await page.waitForSelector('.decks', { timeout: 20000 });
+      await page.waitForSelector('.tabbar', { timeout: 20000 });
       await openDeck();
     }
   }

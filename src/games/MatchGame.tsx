@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import type { Card, Deck } from '../types';
+import { useMemo, useState } from 'react';
+import type { Card, Deck, Tier } from '../types';
+import { playable } from '../lib/deck';
+import Empty from '../components/Empty';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { isMatchResult, read, write } from '../lib/storage';
@@ -30,6 +32,8 @@ interface Saved {
 interface Props {
   deck: Deck;
   names: [string, string];
+  maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
@@ -39,7 +43,21 @@ type Phase =
   | { step: 'handoff' }
   | { step: 'result'; both: Card[]; partial: Card[] };
 
-export default function MatchGame({ deck, names, onExit }: Props) {
+export default function MatchGame({ deck, names, maxTier, availableProps, onExit }: Props) {
+  /**
+   * The ceiling applies here too.
+   *
+   * This engine sorted `deck.cards` outright, so a deck spanning tiers 3 to 5
+   * dealt its tier-5 cards at a ceiling of 3. Onboarding says nothing above the
+   * ceiling is ever drawn; for every sorting deck that was simply untrue, and it
+   * is the one promise the whole safety layer rests on. Memoised so the pool
+   * cannot renumber underneath a sort that is already running.
+   */
+  const pool = useMemo(
+    () => playable(deck.cards, maxTier, availableProps),
+    [deck, maxTier, availableProps],
+  );
+
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });
   const [firstAnswers, setFirstAnswers] = useState<Answers | null>(null);
   const saved = read<Saved | null>(`match.${deck.id}`, null, isMatchResult);
@@ -48,10 +66,10 @@ export default function MatchGame({ deck, names, onExit }: Props) {
     ids.map((id) => deck.cards.find((c) => c.id === id)).filter((c): c is Card => Boolean(c));
 
   function choose(p: Extract<Phase, { step: 'sorting' }>, choice: Choice) {
-    const answers = { ...p.answers, [deck.cards[p.i]!.id]: choice };
+    const answers = { ...p.answers, [pool[p.i]!.id]: choice };
     const next = p.i + 1;
 
-    if (next < deck.cards.length) {
+    if (next < pool.length) {
       setPhase({ ...p, i: next, answers });
       return;
     }
@@ -65,7 +83,7 @@ export default function MatchGame({ deck, names, onExit }: Props) {
     const a = firstAnswers ?? {};
     const both: Card[] = [];
     const partial: Card[] = [];
-    for (const card of deck.cards) {
+    for (const card of pool) {
       const x = a[card.id];
       const y = answers[card.id];
       if (!x || !y || x === 'no' || y === 'no') continue;
@@ -85,6 +103,10 @@ export default function MatchGame({ deck, names, onExit }: Props) {
 
   useScreenTop(phase.step + (phase.step === 'sorting' ? String(phase.i) : ''));
 
+  // Ease off can drop the ceiling below this deck's opening tier while you are
+  // inside it, which empties the pool under a sort that is already running.
+  if (pool.length === 0 && phase.step !== 'result') return <Empty onExit={onExit} />;
+
   if (phase.step === 'rules') {
     return (
       <Rules
@@ -93,7 +115,7 @@ export default function MatchGame({ deck, names, onExit }: Props) {
         onStart={() => setPhase({ step: 'sorting', who: 0, i: 0, answers: {} })}
         startLabel={`${names[0]} sorts first`}
       >
-        <p className="play__note">{deck.cards.length} cards to sort. Takes a few minutes.</p>
+        <p className="play__note">{pool.length} cards to sort. Takes a few minutes.</p>
         {saved && (
           <button
             className="btn btn--ghost"
@@ -122,8 +144,8 @@ export default function MatchGame({ deck, names, onExit }: Props) {
   }
 
   if (phase.step === 'sorting') {
-    const card = deck.cards[phase.i]!;
-    const pct = Math.round((phase.i / deck.cards.length) * 100);
+    const card = pool[phase.i]!;
+    const pct = Math.round((phase.i / pool.length) * 100);
     return (
       <main className="play">
         <header className="play__top">
@@ -136,7 +158,7 @@ export default function MatchGame({ deck, names, onExit }: Props) {
           </button>
           <span className="play__deck">{names[phase.who]}, alone</span>
           <span className="play__tier">
-            {phase.i + 1} / {deck.cards.length}
+            {phase.i + 1} / {pool.length}
           </span>
         </header>
         <div className="bar" aria-hidden="true">

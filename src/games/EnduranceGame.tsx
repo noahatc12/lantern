@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Deck, Tier } from '../types';
+import { playable } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -18,6 +19,7 @@ interface Props {
   deck: Deck & { turnSeconds?: number; capSeconds?: number };
   names: [string, string];
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
@@ -26,10 +28,10 @@ type Phase =
   | { step: 'playing'; active: 0 | 1; constraint: string }
   | { step: 'over'; loser: 0 | 1 | null };
 
-export default function EnduranceGame({ deck, names, maxTier, onExit }: Props) {
+export default function EnduranceGame({ deck, names, maxTier, availableProps, onExit }: Props) {
   const turnSeconds = deck.turnSeconds ?? 120;
   const capSeconds = deck.capSeconds ?? 1200;
-  const constraints = deck.cards.filter((c) => c.tier <= maxTier);
+  const constraints = playable(deck.cards, maxTier, availableProps);
 
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });
   const [turnLeft, setTurnLeft] = useState(turnSeconds);

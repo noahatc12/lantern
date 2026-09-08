@@ -109,6 +109,22 @@ export interface VaultItem {
   redeemedAt?: number;
 }
 
+export const isProps: Guard<string[]> = isStringArray;
+
+export interface Resume {
+  deckId: string;
+  at: number;
+}
+
+export const isResume: Guard<Resume | null> = (v): v is Resume | null => {
+  if (v === null) return true;
+  if (typeof v !== 'object') return false;
+  const o = v as Record<string, unknown>;
+  return isStr(o.deckId) && typeof o.at === 'number';
+};
+
+export const isBool: Guard<boolean> = (v): v is boolean => typeof v === 'boolean';
+
 export const isVaultItems: Guard<VaultItem[]> = (v): v is VaultItem[] =>
   Array.isArray(v) &&
   v.every((it) => {
@@ -121,3 +137,34 @@ export const isVaultItems: Guard<VaultItem[]> = (v): v is VaultItem[] =>
       typeof o.createdAt === 'number'
     );
   });
+
+/**
+ * Every stored key under our prefix, prefix stripped.
+ *
+ * Needed by two things that have to be exhaustive rather than approximate:
+ * "erase everything on this device", which must not leave a per-deck key
+ * behind, and the vault's saved-results list, which is keyed per deck and so
+ * cannot be found without enumerating.
+ */
+export function keys(): string[] {
+  try {
+    const out: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX)) out.push(k.slice(PREFIX.length));
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Removes every key this app owns. `keep` is for the content key, which is a
+ * decryption credential rather than something either of you put in: erasing
+ * your data should not also demand the passphrase again.
+ */
+export function clearAll(keep: string[] = []): void {
+  const spare = new Set(keep);
+  for (const k of keys()) if (!spare.has(k)) remove(k);
+}

@@ -98,12 +98,32 @@ const INVARIANTS = `() => {
   }
 
   // Signature of the current screen, used to detect navigation.
+  //
+  // Screens that can declare who they are do so with data-screen. Deriving the
+  // signature from visible text instead means FILTERING a list reads as
+  // navigation, and the harness reports a scroll violation for someone typing
+  // in a search box. Games have no attribute and still fall back to the text
+  // signature, which is what catches phase changes inside them.
   const main = document.querySelector('main');
   const sig = main
-    ? (main.className || '') + '|' + (main.innerText || '').slice(0, 60).replace(/\\s+/g, ' ')
+    ? main.dataset.screen ||
+      (main.className || '') + '|' + (main.innerText || '').slice(0, 60).replace(/\\s+/g, ' ')
     : 'none';
 
-  return { out, sig, scrollY: window.scrollY || 0, controls: controls.length };
+  return {
+    out,
+    sig,
+    scrollY: window.scrollY || 0,
+    controls: controls.length,
+    // Leaving a game returns you to the tab you left from, at the place you
+    // left it, which is what every list-and-detail interface does. The tab bar
+    // is only rendered on tab roots, so its arrival is exactly that transition.
+    hasTabs: !!document.querySelector('.tabbar'),
+    // "Lock now" is a real control the monkey can and should press. Landing on
+    // the gate is correct behaviour, not a violation; it just has to let itself
+    // back in or it spends the rest of the run staring at a password box.
+    locked: !!document.querySelector('.gate__input') && !document.querySelector('.tabbar'),
+  };
 }`;
 
 async function main() {
@@ -123,16 +143,31 @@ async function main() {
     if (m.type() === 'error' && !m.text().includes('404')) errors.push(`console: ${m.text()}`);
   });
 
+  const unlock = async () => {
+    await page.waitForSelector('.gate__input', { timeout: 20000 });
+    await page.fill('.gate__input', PASS);
+    await page.click('button[type="submit"]');
+    await page.waitForSelector('.ob, .tabbar', { timeout: 40000 });
+  };
+
   await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.gate__input', { timeout: 20000 });
-  await page.fill('.gate__input', PASS);
-  await page.click('button[type="submit"]');
-  await page.waitForFunction(() => document.querySelectorAll('.gate__input').length === 2, { timeout: 40000 });
-  const nameInputs = page.locator('.gate__input');
-  await nameInputs.nth(0).fill('Noah');
-  await nameInputs.nth(1).fill('Lily');
-  await page.click('.btn--primary');
-  await page.waitForSelector('.decks', { timeout: 15000 });
+  await unlock();
+
+  // Onboarding, walked the way a person walks it. The monkey needs to get past
+  // it rather than randomly poke at it, or every run spends its budget on three
+  // screens instead of on the games.
+  if (await page.locator('.ob').count()) {
+    const nameInputs = page.locator('.ob .field');
+    await nameInputs.nth(0).fill('Noah');
+    await nameInputs.nth(1).fill('Lily');
+    await page.locator('.ob__foot .btn--primary').click();
+    await page.waitForSelector('.ob .tiers__row', { timeout: 10000 });
+    await page.locator('.ob .tier').nth(4).click();
+    await page.locator('.ob__foot .btn--primary').click();
+    await page.waitForSelector('.ctrl--stop', { timeout: 10000 });
+    await page.locator('.ob__foot .btn--primary').click();
+  }
+  await page.waitForSelector('.tabbar', { timeout: 15000 });
 
   let prev = await page.evaluate(`(${INVARIANTS})()`);
   screensSeen.add(prev.sig.slice(0, 40));
@@ -210,8 +245,8 @@ async function main() {
     // BACK to it restores your place, which is correct behaviour rather than
     // carried-over scroll. Asserting scrollY===0 everywhere is what made me
     // break list restoration in the first place.
-    const toList = m.sig.startsWith('home');
-    if (m.sig !== prev.sig && !toList && m.scrollY !== 0) {
+    const cameBackToATab = !prev.hasTabs && m.hasTabs;
+    if (m.sig !== prev.sig && !cameBackToATab && m.scrollY !== 0) {
       violation(step, 'scroll-carry', `entered a new screen at scrollY=${m.scrollY}`);
     }
 
@@ -220,6 +255,21 @@ async function main() {
     }
 
     screensSeen.add(m.sig.slice(0, 40));
+
+    // Pressing "Lock now" is allowed and works; it just puts the passphrase in
+    // the way. Walk back in so the remaining steps are spent on the app.
+    if (m.locked) {
+      try {
+        await unlock();
+        await page.waitForTimeout(120);
+        m = await page.evaluate(`(${INVARIANTS})()`);
+        trail.push(`${step}: (re-unlocked)`);
+      } catch (err) {
+        violation(step, 'lock-recovery', String(err).slice(0, 160));
+        break;
+      }
+    }
+
     prev = m;
   }
 

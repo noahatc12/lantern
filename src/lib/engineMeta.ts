@@ -12,6 +12,21 @@ import type { EngineId, Tier } from '../types';
  * couple picks along. Nobody has ever thought "I want a Scale game tonight".
  */
 
+/**
+ * What each tier means, in words.
+ *
+ * Four screens had their own copy of this. Four copies of a safety vocabulary
+ * is three chances for the ceiling to be described one way on the screen where
+ * you set it and another on the screen where it applies.
+ */
+export const TIER_LABEL: Record<Tier, string> = {
+  1: 'anywhere',
+  2: 'personal',
+  3: 'flirty',
+  4: 'explicit',
+  5: 'no limit',
+};
+
 export const ENGINE_COLOR: Record<EngineId, string> = {
   draw: '#e8b64c',
   match: '#74cf90',

@@ -168,3 +168,39 @@ export function poolProgress(deck: Deck, state: SessionState): { seen: number; t
   const ids = new Set(pool.map((c) => c.id));
   return { seen: state.drawn.filter((id) => ids.has(id)).length, total: pool.length };
 }
+
+/**
+ * Tier-and-props filter for the engines that do not run a full session.
+ *
+ * `eligible()` above needs a SessionState; most engines (compare, scale,
+ * predict, ladder, endurance, builder) keep their own much simpler state and
+ * were each filtering with a bare `c.tier <= maxTier`. That silently ignored
+ * `props`, so a card needing a blindfold could be dealt to a couple who had
+ * said they did not have one. Same rule, one implementation, no session
+ * required. Generic over the item because the builder's slot options carry a
+ * tier and props but are not Cards.
+ */
+export function playable<T extends { tier: Tier; props?: string[] }>(
+  items: readonly T[],
+  maxTier: Tier,
+  have: readonly string[],
+): T[] {
+  const hand = new Set(have);
+  return items.filter(
+    (it) => it.tier <= maxTier && (it.props ?? []).every((p) => hand.has(p)),
+  );
+}
+
+/** Every distinct prop any card or slot option in these decks asks for. */
+export function propsUsed(decks: readonly Deck[]): string[] {
+  const found = new Set<string>();
+  const eat = (list: readonly { props?: string[] }[] | undefined) => {
+    for (const it of list ?? []) for (const p of it.props ?? []) found.add(p);
+  };
+  for (const deck of decks) {
+    eat(deck.cards);
+    const slots = (deck as Deck & { slotDefs?: { options?: { props?: string[] }[] }[] }).slotDefs;
+    for (const def of slots ?? []) eat(def.options);
+  }
+  return [...found].sort();
+}

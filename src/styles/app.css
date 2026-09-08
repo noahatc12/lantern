@@ -824,37 +824,6 @@ input {
 
 /* ---------- stop controls ---------- */
 
-.tl {
-  position: fixed;
-  right: 12px;
-  bottom: var(--safe-bottom);
-  z-index: 40;
-  display: flex;
-  gap: 8px;
-}
-
-.tl__btn {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: var(--panel-2);
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.tl__btn--yellow {
-  border-color: #6b5a22;
-  color: #e8c86c;
-}
-
-.tl__btn--red {
-  border-color: #7a3a30;
-  color: var(--bad);
-}
-
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
@@ -1277,18 +1246,18 @@ input {
 .slot__mark,
 .rolled__reroll,
 .play__back,
+.backbtn,
 .tier,
 .scale__btn,
 .handoff__go,
-.tl__btn,
+.floor__btn,
 .guess,
 .deckcard {
   min-height: 44px;
 }
 
 .slot__mark,
-.rolled__reroll,
-.home__names {
+.rolled__reroll {
   min-width: 56px;
 }
 

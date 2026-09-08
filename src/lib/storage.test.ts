@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  clearAll,
   isMatchResult,
   isNames,
   isStringArray,
   isTier,
   isVaultItems,
+  keys,
   read,
   write,
 } from './storage';
@@ -32,6 +34,12 @@ class MemoryStorage {
   }
   clear() {
     this.map.clear();
+  }
+  get length() {
+    return this.map.size;
+  }
+  key(i: number) {
+    return [...this.map.keys()][i] ?? null;
   }
 }
 
@@ -115,5 +123,32 @@ describe('guards', () => {
   it('a tier written as a string by an older build does not survive a read', () => {
     write('maxTier', '4');
     expect(read('maxTier', 2, isTier)).toBe(2);
+  });
+});
+
+describe('keys and clearAll', () => {
+  it('lists only this app’s keys, with the prefix stripped', () => {
+    write('names', ['a', 'b']);
+    write('seen.truth-or-dare', ['x']);
+    mem.setItem('someone-elses-key', '1');
+    expect(keys().sort()).toEqual(['names', 'seen.truth-or-dare']);
+  });
+
+  it('erases everything it owns and nothing it does not', () => {
+    write('names', ['a', 'b']);
+    write('vault.items', []);
+    mem.setItem('someone-elses-key', '1');
+    clearAll();
+    expect(keys()).toEqual([]);
+    expect(mem.getItem('someone-elses-key')).toBe('1');
+  });
+
+  it('spares the keys it is told to spare', () => {
+    // The content key is a decryption credential rather than something either
+    // person put in, so erasing your data must not also demand the passphrase.
+    write('contentKey', 'abc');
+    write('names', ['a', 'b']);
+    clearAll(['contentKey']);
+    expect(keys()).toEqual(['contentKey']);
   });
 });

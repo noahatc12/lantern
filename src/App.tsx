@@ -1,12 +1,33 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { installSafeAreaVars } from './lib/safeArea';
-import { hasContent, tryCached } from './lib/content';
+import { forget, hasContent, tryCached } from './lib/content';
 import type { Bundle } from './lib/content';
-import { isNames, isTier, read, write } from './lib/storage';
+import { propsUsed } from './lib/deck';
+import { TIER_LABEL } from './lib/engineMeta';
+import {
+  isBool,
+  isNames,
+  isProps,
+  isResume,
+  isTier,
+  clearAll,
+  keys,
+  read,
+  remove,
+  write,
+} from './lib/storage';
+import type { Resume } from './lib/storage';
 import { useUpdateAvailable } from './lib/useUpdateAvailable';
 import type { Deck, Tier } from './types';
 import Unlock from './screens/Unlock';
-import Home from './screens/Home';
+import Onboard from './screens/Onboard';
+import Tonight from './screens/Tonight';
+import Shelf from './screens/Shelf';
+import Vault from './screens/Vault';
+import Settings from './screens/Settings';
+import TabBar from './components/TabBar';
+import FloorBar from './components/FloorBar';
+import type { Tab } from './components/TabBar';
 import DrawGame from './games/DrawGame';
 import MatchGame from './games/MatchGame';
 import PredictGame from './games/PredictGame';
@@ -20,13 +41,16 @@ import EnduranceGame from './games/EnduranceGame';
 
 type Names = [string, string];
 
-type Screen =
+type Route =
   | { at: 'boot' }
   | { at: 'missing' }
   | { at: 'locked' }
-  | { at: 'names' }
-  | { at: 'home' }
+  | { at: 'onboard' }
+  | { at: 'tabs' }
   | { at: 'game'; deck: Deck };
+
+/** How long a game stays offered as "pick up where you were". */
+const RESUME_WINDOW = 18 * 3600 * 1000;
 
 /**
  * App wraps the screen body so the update banner can sit above every screen
@@ -50,6 +74,22 @@ function UpdateBanner() {
   );
 }
 
+/**
+ * One suggestion, stable for the day.
+ *
+ * Recomputing a random pick on every render means the card under your thumb
+ * changes as you reach for it. Seeding from the date makes it stable while you
+ * are looking at it and different tomorrow, which is the behaviour "start here"
+ * implies. Skips whatever is already offered as resume, so the screen never
+ * makes the same suggestion twice in two places.
+ */
+function suggestFor(decks: Deck[], skip: string | null): Deck | null {
+  const pool = decks.filter((d) => d.id !== skip && d.engine !== 'vault');
+  if (pool.length === 0) return decks[0] ?? null;
+  const day = Math.floor(Date.now() / 86400000);
+  return pool[day % pool.length] ?? null;
+}
+
 function AppBody() {
   // Test hook. The harness sets this to prove the error boundary actually
   // catches, recovers and records. Inert unless deliberately set.
@@ -57,75 +97,150 @@ function AppBody() {
     throw new Error('deliberate crash from the test hook');
   }
 
-  const [screen, setScreen] = useState<Screen>({ at: 'boot' });
+  const [route, setRoute] = useState<Route>({ at: 'boot' });
+  const [tab, setTab] = useState<Tab>('tonight');
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [names, setNames] = useState<Names>(() => read<Names>('names', ['', ''], isNames));
-  const [maxTier, setMaxTier] = useState<Tier>(() => read<Tier>('maxTier', 2, isTier));
+
+  /**
+   * Two ceilings, not one.
+   *
+   * `defaultTier` is where every session opens and is the thing that persists.
+   * `maxTier` is tonight's live ceiling: raising it is a decision made in the
+   * room, and it should not silently still be raised next week when one of you
+   * opens the app alone. So the live ceiling is deliberately NOT written to
+   * disk. Existing installs seed the default from the old single value.
+   */
+  const [defaultTier, setDefaultTier] = useState<Tier>(() =>
+    read<Tier>('defaultTier', read<Tier>('maxTier', 2, isTier), isTier),
+  );
+  const [maxTier, setMaxTier] = useState<Tier>(defaultTier);
+
+  const [availableProps, setAvailableProps] = useState<string[]>(() =>
+    read<string[]>('props', [], isProps),
+  );
+  const [resume, setResume] = useState<Resume | null>(() =>
+    read<Resume | null>('resume', null, isResume),
+  );
+
+  /**
+   * Stopped is App state, not engine state, so that one implementation covers
+   * every game and no future engine can quietly ship without a stop.
+   */
+  const [stopped, setStopped] = useState(false);
 
   useEffect(() => {
     installSafeAreaVars();
     void (async () => {
       if (!(await hasContent())) {
-        setScreen({ at: 'missing' });
+        setRoute({ at: 'missing' });
         return;
       }
       const cached = await tryCached();
       if (cached) {
         setBundle(cached);
-        setScreen(names[0] && names[1] ? { at: 'home' } : { at: 'names' });
+        setRoute(onboardedAlready() ? { at: 'tabs' } : { at: 'onboard' });
       } else {
-        setScreen({ at: 'locked' });
+        setRoute({ at: 'locked' });
       }
     })();
-    // names is read once at boot on purpose; later edits route explicitly
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Reset scroll on every screen change.
-   *
-   * Without this you scroll the home list, tap a deck, and land halfway down
-   * the new screen because the window keeps its scroll position across a React
-   * view swap. It shipped, and it was visible in a screenshot I read and
-   * approved: the rules screen started mid-sentence and I registered that as a
-   * crop rather than as the actual scroll position.
-   */
+  function onboardedAlready(): boolean {
+    // An install from before onboarding existed has names but no flag. Sending
+    // those two back through a first-run flow would be a regression dressed up
+    // as a feature, so names standing in for the flag is deliberate.
+    const flag = read<boolean>('onboarded', false, isBool);
+    const n = read<Names>('names', ['', ''], isNames);
+    return flag || (n[0].length > 0 && n[1].length > 0);
+  }
+
   /**
    * Scroll behaviour on navigation.
    *
-   * Forward into a screen goes to the top. Back to the game list RESTORES where
-   * you were, which is what every list-and-detail interface does and what your
-   * hands expect.
-   *
-   * I originally reset scroll on every navigation, which fixed opening a game
-   * part-way down and broke returning to the list in the same stroke. A blanket
-   * rule was the wrong shape: the two directions want opposite things.
+   * Forward into a screen goes to the top. Back to a list RESTORES where you
+   * were, which is what every list-and-detail interface does and what your hands
+   * expect. An earlier blanket "reset on every navigation" fixed opening a game
+   * part-way down and broke returning to the list in the same stroke.
    *
    * Layout effect rather than effect, so the position is set before paint and
    * you never see a flash at the top.
    */
   const listScroll = useRef(0);
+  const restoring = useRef(false);
+  // Stopping is a screen change even though the route is unchanged, so it has
+  // to be part of the key. Without it, Stop from halfway down a play screen
+  // leaves you halfway down the stop screen.
+  const routeKey =
+    route.at === 'game' ? `game:${route.deck.id}:${stopped}` : `${route.at}:${tab}`;
 
   useLayoutEffect(() => {
-    if (screen.at === 'home') {
+    if (restoring.current) {
       window.scrollTo(0, listScroll.current);
-    } else {
-      window.scrollTo(0, 0);
-      document.scrollingElement?.scrollTo(0, 0);
+      restoring.current = false;
+      return;
     }
-  }, [screen.at, screen.at === 'game' ? screen.deck.id : null]);
+    window.scrollTo(0, 0);
+    document.scrollingElement?.scrollTo(0, 0);
+  }, [routeKey]);
+
+  const decks = bundle?.decks ?? [];
+
+  /**
+   * The prop vocabulary comes from the content, never from a hand-written list.
+   * A settings toggle for an item no card requires is a control that does
+   * nothing, and it makes the guardrail line on Tonight claim filtering that is
+   * not happening.
+   */
+  const knownProps = useMemo(
+    () =>
+      propsUsed(decks).map((name) => ({
+        name,
+        gates: countGated(decks, name),
+      })),
+    [decks],
+  );
 
   function onUnlocked(b: Bundle) {
     setBundle(b);
-    setScreen(names[0] && names[1] ? { at: 'home' } : { at: 'names' });
+    setRoute(onboardedAlready() ? { at: 'tabs' } : { at: 'onboard' });
   }
 
-  function saveTier(t: Tier) {
-    setMaxTier(t);
-    write('maxTier', t);
+  function openDeck(deck: Deck) {
+    setStopped(false);
+    if (deck.engine === 'vault') {
+      setTab('vault');
+      setRoute({ at: 'tabs' });
+      return;
+    }
+    listScroll.current = window.scrollY;
+    const mark: Resume = { deckId: deck.id, at: Date.now() };
+    setResume(mark);
+    write('resume', mark);
+    setRoute({ at: 'game', deck });
   }
 
-  if (screen.at === 'boot') {
+  function leaveGame() {
+    restoring.current = true;
+    setStopped(false);
+    setRoute({ at: 'tabs' });
+  }
+
+  /**
+   * Ease off drops tonight's ceiling one step and says nothing about who did
+   * it. Every engine derives its pool from maxTier, so the deck follows on the
+   * next draw without anything else being told.
+   */
+  function easeOff() {
+    setMaxTier((t) => (t > 1 ? ((t - 1) as Tier) : t));
+  }
+
+  function pickTab(next: Tab) {
+    setTab(next);
+    setRoute({ at: 'tabs' });
+  }
+
+  if (route.at === 'boot') {
     return (
       <main className="gate">
         <span className="dot" aria-hidden="true" />
@@ -134,17 +249,22 @@ function AppBody() {
     );
   }
 
-  if (screen.at === 'missing') return <Unlock missing onUnlocked={onUnlocked} />;
-  if (screen.at === 'locked') return <Unlock missing={false} onUnlocked={onUnlocked} />;
+  if (route.at === 'missing') return <Unlock missing onUnlocked={onUnlocked} />;
+  if (route.at === 'locked') return <Unlock missing={false} onUnlocked={onUnlocked} />;
 
-  if (screen.at === 'names') {
+  if (route.at === 'onboard') {
     return (
-      <NameSetup
-        initial={names}
-        onDone={(n) => {
+      <Onboard
+        initialNames={names}
+        initialTier={defaultTier}
+        onDone={(n, t) => {
           setNames(n);
           write('names', n);
-          setScreen({ at: 'home' });
+          setDefaultTier(t);
+          write('defaultTier', t);
+          setMaxTier(t);
+          write('onboarded', true);
+          setRoute({ at: 'tabs' });
         }}
       />
     );
@@ -152,84 +272,164 @@ function AppBody() {
 
   if (!bundle) return null;
 
-  if (screen.at === 'home') {
-    return (
-      <Home
-        decks={bundle.decks}
-        names={names}
-        maxTier={maxTier}
-        onPick={(deck) => {
-          listScroll.current = window.scrollY;
-          setScreen({ at: 'game', deck });
-        }}
-        onTier={saveTier}
-        onNames={() => {
-          listScroll.current = window.scrollY;
-          setScreen({ at: 'names' });
-        }}
+  if (route.at === 'game') {
+    const deck = route.deck;
+
+    if (stopped) {
+      return (
+        <main className="stopped" data-screen="stopped">
+          <h1 className="stopped__title">Stopped.</h1>
+          <p className="stopped__body">
+            That is the whole feature. No score, no record, and no question about who
+            called it.
+          </p>
+          <button className="btn btn--big" onClick={leaveGame}>
+            Back
+          </button>
+        </main>
+      );
+    }
+
+    const common = { deck, names, maxTier, availableProps, onExit: leaveGame };
+    const floor = (
+      <FloorBar
+        label={`ceiling ${maxTier}, ${TIER_LABEL[maxTier]}`}
+        tier={maxTier}
+        onEase={easeOff}
+        onStop={() => setStopped(true)}
       />
+    );
+    const body = (() => {
+    switch (deck.engine) {
+      case 'match':
+        return <MatchGame {...common} />;
+      case 'predict':
+        return <PredictGame {...common} />;
+      case 'timer':
+        return <TimerGame deck={deck} onExit={leaveGame} />;
+      case 'ladder':
+        return <LadderGame {...common} />;
+      case 'compare':
+        return <CompareGame {...common} />;
+      case 'scale':
+        return <ScaleGame {...common} />;
+      case 'builder':
+        return <BuilderGame deck={deck} maxTier={maxTier} availableProps={availableProps} onExit={leaveGame} />;
+      case 'vault':
+        return <VaultGame deck={deck} names={names} decks={decks} onExit={leaveGame} />;
+      case 'endurance':
+        return <EnduranceGame {...common} />;
+      default:
+        return <DrawGame {...common} />;
+    }
+    })();
+
+    // The vault is a place rather than a round, so a stop control there would
+    // be stopping nothing.
+    return (
+      <>
+        {body}
+        {deck.engine !== 'vault' && floor}
+      </>
     );
   }
 
-  const deck = screen.deck;
-  const back = () => setScreen({ at: 'home' });
+  const resumeDeck =
+    resume && Date.now() - resume.at < RESUME_WINDOW
+      ? (decks.find((d) => d.id === resume.deckId && d.tierRange[0] <= maxTier) ?? null)
+      : null;
 
-  switch (deck.engine) {
-    case 'match':
-      return <MatchGame deck={deck} names={names} onExit={back} />;
-    case 'predict':
-      return <PredictGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
-    case 'timer':
-      return <TimerGame deck={deck} onExit={back} />;
-    case 'ladder':
-      return <LadderGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
-    case 'compare':
-      return <CompareGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
-    case 'scale':
-      return <ScaleGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
-    case 'builder':
-      return <BuilderGame deck={deck} maxTier={maxTier} onExit={back} />;
-    case 'vault':
-      return <VaultGame deck={deck} names={names} onExit={back} />;
-    case 'endurance':
-      return <EnduranceGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
-    default:
-      return <DrawGame deck={deck} names={names} maxTier={maxTier} onExit={back} />;
-  }
-}
-
-function NameSetup({ initial, onDone }: { initial: Names; onDone: (n: Names) => void }) {
-  const [a, setA] = useState(initial[0]);
-  const [b, setB] = useState(initial[1]);
-  const ready = a.trim().length > 0 && b.trim().length > 0;
+  const inCeiling = decks.filter((d) => d.tierRange[0] <= maxTier);
 
   return (
-    <main className="gate">
-      <h1 className="gate__title">Who is playing?</h1>
-      <div className="gate__form">
-        <input
-          className="gate__input"
-          value={a}
-          onChange={(e) => setA(e.target.value)}
-          placeholder="first name"
-          autoCapitalize="words"
+    <>
+      {tab === 'tonight' && (
+        <Tonight
+          decks={decks}
+          names={names}
+          maxTier={maxTier}
+          suggested={suggestFor(inCeiling, resumeDeck?.id ?? null)}
+          resume={resumeDeck}
+          availableProps={availableProps}
+          knownProps={knownProps}
+          onPick={openDeck}
+          onShuffle={() => {
+            const pool = inCeiling.filter((d) => d.engine !== 'vault');
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            if (pick) openDeck(pick);
+          }}
+          onShelf={() => pickTab('shelf')}
+          onTier={setMaxTier}
         />
-        <input
-          className="gate__input"
-          value={b}
-          onChange={(e) => setB(e.target.value)}
-          placeholder="second name"
-          autoCapitalize="words"
+      )}
+
+      {tab === 'shelf' && (
+        <Shelf decks={decks} maxTier={maxTier} onPick={openDeck} onTier={setMaxTier} />
+      )}
+
+      {tab === 'vault' && <Vault decks={decks} names={names} />}
+
+      {tab === 'settings' && (
+        <Settings
+          names={names}
+          defaultTier={defaultTier}
+          availableProps={availableProps}
+          knownProps={knownProps}
+          deckCount={decks.length}
+          onNames={(n) => {
+            setNames(n);
+            write('names', n);
+          }}
+          onDefaultTier={(t) => {
+            setDefaultTier(t);
+            write('defaultTier', t);
+            // Lowering the default below tonight's live ceiling should take
+            // effect now rather than next time. Raising it should not: that is
+            // a decision for the room, made on Tonight.
+            if (t < maxTier) setMaxTier(t);
+          }}
+          onProps={(p) => {
+            setAvailableProps(p);
+            write('props', p);
+          }}
+          onForgetSeen={() => {
+            for (const k of keys()) if (k.startsWith('seen.')) remove(k);
+          }}
+          onLock={() => {
+            forget();
+            setBundle(null);
+            setRoute({ at: 'locked' });
+          }}
+          onEraseAll={() => {
+            // The content key is a decryption credential, not something either
+            // of you put in. Erasing your data should not also demand the
+            // passphrase again.
+            clearAll(['contentKey']);
+            setNames(['', '']);
+            setDefaultTier(2);
+            setMaxTier(2);
+            setAvailableProps([]);
+            setResume(null);
+            setTab('tonight');
+            setRoute({ at: 'onboard' });
+          }}
         />
-        <button
-          className="btn btn--primary"
-          disabled={!ready}
-          onClick={() => onDone([a.trim(), b.trim()])}
-        >
-          Done
-        </button>
-      </div>
-      <p className="gate__hint">Stored on this device only.</p>
-    </main>
+      )}
+
+      <TabBar tab={tab} onPick={pickTab} />
+    </>
   );
+}
+
+/** How many cards or slot options this prop is the gate on. */
+function countGated(decks: Deck[], name: string): number {
+  let n = 0;
+  for (const deck of decks) {
+    for (const card of deck.cards) if (card.props?.includes(name)) n++;
+    const slots = (deck as Deck & { slotDefs?: { options?: { props?: string[] }[] }[] })
+      .slotDefs;
+    for (const def of slots ?? [])
+      for (const opt of def.options ?? []) if (opt.props?.includes(name)) n++;
+  }
+  return n;
 }

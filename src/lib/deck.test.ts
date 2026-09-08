@@ -6,7 +6,9 @@ import {
   ladderTier,
   mulberry32,
   nextTurn,
+  playable,
   poolProgress,
+  propsUsed,
   shuffle,
   startSession,
 } from './deck';
@@ -364,5 +366,69 @@ describe('recycling is scoped to the exhausted pool (regression)', () => {
     }
     // And group A's history is down to just the card it re-drew.
     expect(recycled.state.drawn.filter((id) => id.startsWith('a'))).toHaveLength(1);
+  });
+});
+
+describe('playable', () => {
+  /**
+   * The engines that do not run a full session (compare, scale, predict,
+   * ladder, endurance, builder) each filtered with a bare tier comparison and
+   * so ignored props entirely. A card needing a blindfold could be dealt to two
+   * people who had said they did not have one, which is a promise broken in the
+   * one place the app asks you to trust it.
+   */
+  it('drops anything above the ceiling', () => {
+    const items = [makeCard('a', 1), makeCard('b', 4)];
+    expect(playable(items, 2, []).map((c) => c.id)).toEqual(['a']);
+  });
+
+  it('drops a card needing something you do not have', () => {
+    const items = [makeCard('a', 1), makeCard('b', 1, ['blindfold'])];
+    expect(playable(items, 5, []).map((c) => c.id)).toEqual(['a']);
+    expect(playable(items, 5, ['blindfold']).map((c) => c.id)).toEqual(['a', 'b']);
+  });
+
+  it('needs EVERY prop a card asks for, not just one', () => {
+    const items = [makeCard('a', 1, ['blindfold', 'ice'])];
+    expect(playable(items, 5, ['blindfold'])).toHaveLength(0);
+    expect(playable(items, 5, ['blindfold', 'ice'])).toHaveLength(1);
+  });
+
+  it('works on slot options, which are not Cards', () => {
+    const options = [
+      { text: 'plain', tier: 3 as Tier },
+      { text: 'cold', tier: 3 as Tier, props: ['ice'] },
+    ];
+    expect(playable(options, 5, []).map((o) => o.text)).toEqual(['plain']);
+  });
+});
+
+describe('propsUsed', () => {
+  /**
+   * The settings screen is built from this. Deriving the list from the content
+   * is what stops the app offering a toggle for an item nothing requires, which
+   * would be a control that silently does nothing while the guardrail panel
+   * claims filtering that is not happening.
+   */
+  it('names every prop the content asks for, once, sorted', () => {
+    const deck = makeDeck([
+      makeCard('a', 1, ['ice']),
+      makeCard('b', 1, ['blindfold']),
+      makeCard('c', 1, ['ice']),
+      makeCard('d', 1),
+    ]);
+    expect(propsUsed([deck])).toEqual(['blindfold', 'ice']);
+  });
+
+  it('sees props on builder slot options too', () => {
+    const deck = {
+      ...makeDeck([]),
+      slotDefs: [{ key: 'how', label: 'how', options: [{ text: 'x', tier: 3, props: ['ice'] }] }],
+    };
+    expect(propsUsed([deck])).toEqual(['ice']);
+  });
+
+  it('returns nothing when no card needs anything', () => {
+    expect(propsUsed([makeDeck([makeCard('a', 1)])])).toEqual([]);
   });
 });

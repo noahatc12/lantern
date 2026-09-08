@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import type { Card, Deck, Tier, TrafficLight as Light } from '../types';
+import { useEffect, useMemo, useState } from 'react';
+import type { Card, Deck, Tier } from '../types';
 import {
   applyLight,
   currentTier,
@@ -11,7 +11,6 @@ import {
   resetSeen,
   startSession,
 } from '../lib/deck';
-import TrafficLightBar from '../components/TrafficLight';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -30,16 +29,17 @@ interface Props {
   deck: Deck & { split?: string[]; ladder?: boolean; ladderStep?: number };
   names: [string, string];
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
-export default function DrawGame({ deck, names, maxTier, onExit }: Props) {
+export default function DrawGame({ deck, names, maxTier, availableProps, onExit }: Props) {
   const [started, setStarted] = useState(false);
   const [state, setState] = useState(() =>
     startSession({
       deckId: deck.id,
       maxTier,
-      availableProps: [],
+      availableProps,
       ladder: deck.ladder ?? false,
       ladderStep: deck.ladderStep ?? 5,
     }),
@@ -75,10 +75,16 @@ export default function DrawGame({ deck, names, maxTier, onExit }: Props) {
     setKind(null);
   }
 
-  function light(l: Light) {
-    setState(applyLight(state, l));
-    if (l === 'red') setCard(null);
-  }
+  /**
+   * Ease off now lives on the App's floor bar, so this engine hears about it as
+   * a lowered maxTier rather than as a button press of its own. Following it
+   * here is what makes the drop apply to the session already in progress
+   * instead of only to the next one.
+   */
+  useEffect(() => {
+    if (maxTier < state.effectiveTier) setState(applyLight(state, 'yellow'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxTier]);
 
   useScreenTop(`${started}-${card?.id ?? 'none'}-${state.light}`);
 
@@ -107,20 +113,6 @@ export default function DrawGame({ deck, names, maxTier, onExit }: Props) {
           </button>
         )}
       </Rules>
-    );
-  }
-
-  if (state.light === 'red') {
-    return (
-      <main className="stopped">
-        <h1 className="stopped__title">Stopped.</h1>
-        <p className="stopped__body">
-          That is the whole feature. No score, no record, and no question about who called it.
-        </p>
-        <button className="btn" onClick={onExit}>
-          Back
-        </button>
-      </main>
     );
   }
 
@@ -185,8 +177,6 @@ export default function DrawGame({ deck, names, maxTier, onExit }: Props) {
           </p>
         </section>
       )}
-
-      {currentTier(state) >= 4 && <TrafficLightBar current={state.light} onLight={light} />}
     </main>
   );
 }

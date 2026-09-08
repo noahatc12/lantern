@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Card, Deck, Tier } from '../types';
-import { mulberry32, shuffle } from '../lib/deck';
+import { mulberry32, playable, shuffle } from '../lib/deck';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
@@ -18,6 +18,7 @@ interface Props {
   deck: Deck & { explainThreshold?: number };
   names: [string, string];
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
@@ -29,15 +30,15 @@ type Phase =
 
 const VALUES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-export default function ScaleGame({ deck, names, maxTier, onExit }: Props) {
+export default function ScaleGame({ deck, names, maxTier, availableProps, onExit }: Props) {
   const threshold = deck.explainThreshold ?? 4;
   const pool = useMemo(
     () =>
       shuffle(
-        deck.cards.filter((c) => c.tier <= maxTier),
+        playable(deck.cards, maxTier, availableProps),
         mulberry32(Date.now() & 0xffffffff),
       ),
-    [deck, maxTier],
+    [deck, maxTier, availableProps],
   );
 
   const [i, setI] = useState(0);

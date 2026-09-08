@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Card, Deck, Tier } from '../types';
-import { mulberry32, shuffle } from '../lib/deck';
+import { mulberry32, playable, shuffle } from '../lib/deck';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
@@ -18,6 +18,7 @@ interface Props {
   deck: Deck & { ordered?: boolean };
   names: [string, string];
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
@@ -27,12 +28,12 @@ type Phase =
   | { step: 'handoff'; first: string }
   | { step: 'reveal'; a: string; b: string };
 
-export default function CompareGame({ deck, names, maxTier, onExit }: Props) {
+export default function CompareGame({ deck, names, maxTier, availableProps, onExit }: Props) {
   const pool = useMemo(() => {
-    const eligible = deck.cards.filter((c) => c.tier <= maxTier);
+    const eligible = playable(deck.cards, maxTier, availableProps);
     // Ordered decks are ramps: shuffling one breaks the thing that makes it work.
     return deck.ordered ? eligible : shuffle(eligible, mulberry32(Date.now() & 0xffffffff));
-  }, [deck, maxTier]);
+  }, [deck, maxTier, availableProps]);
 
   const [i, setI] = useState(0);
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });

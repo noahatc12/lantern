@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Deck, Tier } from '../types';
+import { playable } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -14,25 +15,33 @@ import { useScreenTop } from '../lib/useScreenTop';
  * things they did not want.
  */
 
+interface SlotOption {
+  text: string;
+  tier: Tier;
+  /** Physical items this option needs. Filtered out when you do not have them. */
+  props?: string[];
+}
+
 interface SlotDef {
   key: string;
   label: string;
-  options: { text: string; tier: Tier }[];
+  options: SlotOption[];
 }
 
 interface Props {
   deck: Deck & { slotDefs?: SlotDef[] };
   maxTier: Tier;
+  availableProps: string[];
   onExit: () => void;
 }
 
-function pick(options: { text: string; tier: Tier }[], maxTier: Tier): string {
-  const usable = options.filter((o) => o.tier <= maxTier);
+function pick(options: SlotOption[], maxTier: Tier, have: string[]): string {
+  const usable = playable(options, maxTier, have);
   if (usable.length === 0) return '';
   return usable[Math.floor(Math.random() * usable.length)]!.text;
 }
 
-export default function BuilderGame({ deck, maxTier, onExit }: Props) {
+export default function BuilderGame({ deck, maxTier, availableProps, onExit }: Props) {
   const defs = deck.slotDefs ?? [];
   const [started, setStarted] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -41,11 +50,11 @@ export default function BuilderGame({ deck, maxTier, onExit }: Props) {
 
   function rollAll() {
     const next: Record<string, string> = {};
-    for (const d of defs) next[d.key] = pick(d.options, maxTier);
+    for (const d of defs) next[d.key] = pick(d.options, maxTier, availableProps);
     setValues(next);
   }
 
-  const usable = defs.filter((d) => d.options.some((o) => o.tier <= maxTier));
+  const usable = defs.filter((d) => playable(d.options, maxTier, availableProps).length > 0);
 
   if (!started) {
     return (
@@ -59,7 +68,8 @@ export default function BuilderGame({ deck, maxTier, onExit }: Props) {
         startLabel="Roll"
       >
         <p className="play__note">
-          {usable.length} parts, {usable.reduce((n, d) => n + d.options.filter((o) => o.tier <= maxTier).length, 0)}{' '}
+          {usable.length} parts,{' '}
+          {usable.reduce((n, d) => n + playable(d.options, maxTier, availableProps).length, 0)}{' '}
           options at this ceiling.
         </p>
       </Rules>
@@ -99,7 +109,9 @@ export default function BuilderGame({ deck, maxTier, onExit }: Props) {
               <p className="rolled__value">{values[d.key]}</p>
               <button
                 className="rolled__reroll"
-                onClick={() => setValues({ ...values, [d.key]: pick(d.options, maxTier) })}
+                onClick={() =>
+                  setValues({ ...values, [d.key]: pick(d.options, maxTier, availableProps) })
+                }
                 aria-label={`Reroll ${d.label}`}
               >
                 reroll
