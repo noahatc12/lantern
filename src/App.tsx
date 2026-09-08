@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { installSafeAreaVars } from './lib/safeArea';
 import { hasContent, tryCached } from './lib/content';
 import type { Bundle } from './lib/content';
@@ -61,9 +61,29 @@ export default function App() {
    * approved: the rules screen started mid-sentence and I registered that as a
    * crop rather than as the actual scroll position.
    */
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    document.scrollingElement?.scrollTo(0, 0);
+  /**
+   * Scroll behaviour on navigation.
+   *
+   * Forward into a screen goes to the top. Back to the game list RESTORES where
+   * you were, which is what every list-and-detail interface does and what your
+   * hands expect.
+   *
+   * I originally reset scroll on every navigation, which fixed opening a game
+   * part-way down and broke returning to the list in the same stroke. A blanket
+   * rule was the wrong shape: the two directions want opposite things.
+   *
+   * Layout effect rather than effect, so the position is set before paint and
+   * you never see a flash at the top.
+   */
+  const listScroll = useRef(0);
+
+  useLayoutEffect(() => {
+    if (screen.at === 'home') {
+      window.scrollTo(0, listScroll.current);
+    } else {
+      window.scrollTo(0, 0);
+      document.scrollingElement?.scrollTo(0, 0);
+    }
   }, [screen.at, screen.at === 'game' ? screen.deck.id : null]);
 
   function onUnlocked(b: Bundle) {
@@ -109,9 +129,15 @@ export default function App() {
         decks={bundle.decks}
         names={names}
         maxTier={maxTier}
-        onPick={(deck) => setScreen({ at: 'game', deck })}
+        onPick={(deck) => {
+          listScroll.current = window.scrollY;
+          setScreen({ at: 'game', deck });
+        }}
         onTier={saveTier}
-        onNames={() => setScreen({ at: 'names' })}
+        onNames={() => {
+          listScroll.current = window.scrollY;
+          setScreen({ at: 'names' });
+        }}
       />
     );
   }

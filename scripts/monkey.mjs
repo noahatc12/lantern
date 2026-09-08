@@ -206,7 +206,12 @@ async function main() {
     for (const [kind, detail] of out) violation(step, kind, detail);
 
     // Navigation must land at the top of the new screen.
-    if (m.sig !== prev.sig && m.scrollY !== 0) {
+    // Forward navigation must land at the top. The game list is exempt: coming
+    // BACK to it restores your place, which is correct behaviour rather than
+    // carried-over scroll. Asserting scrollY===0 everywhere is what made me
+    // break list restoration in the first place.
+    const toList = m.sig.startsWith('home');
+    if (m.sig !== prev.sig && !toList && m.scrollY !== 0) {
       violation(step, 'scroll-carry', `entered a new screen at scrollY=${m.scrollY}`);
     }
 

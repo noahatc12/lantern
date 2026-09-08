@@ -139,6 +139,30 @@ async function main() {
     await page.waitForSelector('.decks', { timeout: 10000 });
   };
 
+  // ---------- scroll: forward to top, back restores ----------
+  // Both directions asserted together, because fixing one broke the other and
+  // a test for only the first would have called that a success.
+  await page.evaluate(() => window.scrollTo(0, 500));
+  await page.waitForTimeout(150);
+  const listBefore = await page.evaluate(() => window.scrollY);
+  check('the list can be scrolled', listBefore > 100, String(listBefore));
+
+  await page.locator('.deckcard__title', { hasText: 'Deep Talk' }).click();
+  await page.waitForSelector('.rules', { timeout: 10000 });
+  const inGame = await page.evaluate(() => window.scrollY);
+  check('opening a game starts at the top', inGame === 0, `scrollY=${inGame}`);
+
+  await page.locator('.play__back').first().click();
+  await page.waitForSelector('.decks', { timeout: 10000 });
+  await page.waitForTimeout(250);
+  const listAfter = await page.evaluate(() => window.scrollY);
+  check(
+    'going back restores the list position',
+    Math.abs(listAfter - listBefore) < 40,
+    `${listBefore} -> ${listAfter}`,
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   // ---------- rules screens exist for every deck ----------
   for (const title of [
     'Truth or Dare',
