@@ -21,6 +21,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Engine tests
+        run: npm run test
+
       # Near-vacuous here by design: decks/*.json is gitignored, so CI normally
       # sees no plaintext. Its job in CI is to catch plaintext committed by
       # mistake. The real gate is the pre-push hook, where the plaintext lives.

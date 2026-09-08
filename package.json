@@ -10,7 +10,8 @@
     "typecheck": "tsc -b --noEmit",
     "lint:decks": "node scripts/lint-decks.mjs",
     "shots": "node scripts/shots.mjs",
-    "check": "npm run typecheck && npm run lint:decks"
+    "check": "npm run typecheck && npm run test && npm run lint:decks",
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -22,6 +23,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "playwright": "^1.49.0",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^2.1.9"
   }
 }
