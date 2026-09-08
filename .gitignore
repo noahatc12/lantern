@@ -36,3 +36,6 @@ lint-rules.local.json
 
 # Local passphrase file. Never committed, never printed.
 .passphrase.local
+
+# Design canvases carry sample card text. Same rule as docs/.
+design/

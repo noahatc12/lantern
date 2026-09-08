@@ -46,7 +46,11 @@ export default function Home({ decks, names, maxTier, onPick, onTier, onNames }:
       </header>
 
       <section className="tiers" aria-label="Tier ceiling">
-        <p className="tiers__label">tonight goes up to</p>
+        <p className="eyebrow">tonight goes up to {TIER_LABEL[maxTier]}</p>
+        {/* The wick carries the state so the numbers below can stay quiet. */}
+        <div className="wick" aria-hidden="true">
+          <div className="wick__fill" style={{ width: `${(maxTier / 5) * 100}%` }} />
+        </div>
         <div className="tiers__row">
           {([1, 2, 3, 4, 5] as Tier[]).map((t) => (
             <button
@@ -61,7 +65,8 @@ export default function Home({ decks, names, maxTier, onPick, onTier, onNames }:
           ))}
         </div>
         <p className="tiers__hint">
-          Set it together before you start. Either of you can lower it mid-game.
+          Raising it needs both of you in the room. Lowering it needs one tap from
+          either of you, at any point, and is never attributed.
         </p>
       </section>
 
