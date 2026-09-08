@@ -13,6 +13,7 @@ import {
 } from '../lib/deck';
 import TrafficLightBar from '../components/TrafficLight';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E1 Draw, with the ladder. Truth or Dare runs on this.
@@ -78,6 +79,8 @@ export default function DrawGame({ deck, names, maxTier, onExit }: Props) {
     setState(applyLight(state, l));
     if (l === 'red') setCard(null);
   }
+
+  useScreenTop(`${started}-${card?.id ?? 'none'}-${state.light}`);
 
   if (!started) {
     return (

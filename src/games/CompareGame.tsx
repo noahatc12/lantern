@@ -3,6 +3,7 @@ import type { Card, Deck, Tier } from '../types';
 import { mulberry32, shuffle } from '../lib/deck';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E3 Compare. Both answer the same question privately, then both answers are
@@ -36,6 +37,8 @@ export default function CompareGame({ deck, names, maxTier, onExit }: Props) {
   const [i, setI] = useState(0);
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });
   const [draft, setDraft] = useState('');
+
+  useScreenTop(`${phase.step}-${i}`);
 
   const card: Card | undefined = pool[i];
 

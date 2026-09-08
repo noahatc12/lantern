@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Deck, Tier } from '../types';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E7 Ladder. The Ask runs on this.
@@ -32,6 +33,8 @@ export default function LadderGame({ deck, names, maxTier, onExit }: Props) {
   const [optedIn, setOptedIn] = useState<[boolean, boolean]>([false, false]);
   const [ended, setEnded] = useState(false);
   const [asker, setAsker] = useState<0 | 1>(0);
+
+  useScreenTop(`${started}-${i}-${optedIn[0]}${optedIn[1]}-${ended}`);
 
   const card = rungs[i];
   const both = optedIn[0] && optedIn[1];

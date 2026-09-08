@@ -276,7 +276,7 @@ input {
 }
 
 .home__names {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -422,8 +422,8 @@ input {
 }
 
 .play__back {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   border: 0;
   border-radius: 20px;
   background: transparent;
@@ -650,7 +650,7 @@ input {
 }
 
 .slot__mark {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -1091,7 +1091,8 @@ input {
 
 .rolled__reroll {
   grid-area: reroll;
-  min-height: 40px;
+  min-height: 44px;
+  min-width: 60px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -1244,4 +1245,28 @@ input {
     opacity: 1;
     transform: none;
   }
+}
+
+
+/* Apple's 44pt minimum, enforced rather than remembered. The monkey measured
+   83 violations across the app; half of these controls get pressed in a dark
+   room, which is exactly when a 36px target starts costing you. */
+.btn,
+.home__names,
+.slot__mark,
+.rolled__reroll,
+.play__back,
+.tier,
+.scale__btn,
+.handoff__go,
+.tl__btn,
+.guess,
+.deckcard {
+  min-height: 44px;
+}
+
+.slot__mark,
+.rolled__reroll,
+.home__names {
+  min-width: 56px;
 }

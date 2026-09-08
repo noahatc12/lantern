@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Deck, Tier } from '../types';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E8 Builder. Assembles a prompt from independent slot pools.
@@ -35,6 +36,8 @@ export default function BuilderGame({ deck, maxTier, onExit }: Props) {
   const defs = deck.slotDefs ?? [];
   const [started, setStarted] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
+
+  useScreenTop(started);
 
   function rollAll() {
     const next: Record<string, string> = {};

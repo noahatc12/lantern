@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Deck } from '../types';
 import Rules from '../components/Rules';
 import { read, write } from '../lib/storage';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E10 Vault. Deferred redemption.
@@ -52,6 +53,8 @@ export default function VaultGame({ deck, names, onExit }: Props) {
   const now = Date.now();
   const open = items.filter((it) => !it.redeemedAt);
   const done = items.filter((it) => it.redeemedAt);
+
+  useScreenTop(`${started}-${drafting}`);
 
   if (!started) {
     return (

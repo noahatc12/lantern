@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Deck, Tier } from '../types';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E2 Predict, authored variant. Two Truths and a Turn-On runs on this.
@@ -52,6 +53,8 @@ export default function PredictGame({ deck, names, maxTier, onExit }: Props) {
       &larr;
     </button>
   );
+
+  useScreenTop(phase.step);
 
   if (phase.step === 'rules') {
     return <Rules deck={deck} onExit={onExit} onStart={() => setPhase({ step: 'prompt' })} />;

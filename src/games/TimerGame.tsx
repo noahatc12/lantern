@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Deck } from '../types';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E6 Timer. The Long Kiss runs on this.
@@ -52,6 +53,8 @@ export default function TimerGame({ deck, onExit }: Props) {
   const ss = String(left % 60).padStart(2, '0');
   const done = elapsed >= total;
   const pct = Math.min(100, (elapsed / total) * 100);
+
+  useScreenTop(`${started}-${running}`);
 
   if (!started) {
     return (

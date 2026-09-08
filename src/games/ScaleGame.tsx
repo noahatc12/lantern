@@ -3,6 +3,7 @@ import type { Card, Deck, Tier } from '../types';
 import { mulberry32, shuffle } from '../lib/deck';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E5 Scale. Both rate the same thing 0 to 10, and the GAP is revealed before
@@ -41,6 +42,8 @@ export default function ScaleGame({ deck, names, maxTier, onExit }: Props) {
 
   const [i, setI] = useState(0);
   const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  useScreenTop(`${phase.step}-${i}`);
+
   const card: Card | undefined = pool[i];
 
   if (phase.step === 'rules') {

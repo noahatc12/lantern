@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Deck, Tier } from '../types';
 import Rules from '../components/Rules';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E11 Endurance. Two people, one loses by reacting.
@@ -57,6 +58,8 @@ export default function EnduranceGame({ deck, names, maxTier, onExit }: Props) {
     return constraints[Math.floor(Math.random() * constraints.length)]!.text;
   }
 
+  useScreenTop(phase.step);
+
   if (phase.step === 'rules') {
     return (
       <Rules
@@ -77,8 +80,12 @@ export default function EnduranceGame({ deck, names, maxTier, onExit }: Props) {
   }
 
   if (phase.step === 'over') {
+    // stopped--outcome, not a plain stop screen. Naming who broke first is this
+    // game's RESULT, not an attribution of who called a halt. Safety stops must
+    // never name anyone; a game outcome legitimately does. Keeping both in one
+    // class made the safety rule unenforceable, which the monkey caught.
     return (
-      <main className="stopped">
+      <main className="stopped stopped--outcome">
         <h1 className="stopped__title">
           {phase.loser === null ? 'A draw.' : `${names[phase.loser]} broke first.`}
         </h1>

@@ -15,7 +15,8 @@
     "seal": "node scripts/seal.mjs",
     "walk": "node scripts/walkthrough.mjs",
     "audit": "node scripts/walkthrough.mjs",
-    "publish": "node scripts/publish.mjs"
+    "publish": "node scripts/publish.mjs",
+    "monkey": "node scripts/monkey.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

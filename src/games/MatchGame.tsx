@@ -3,6 +3,7 @@ import type { Card, Deck } from '../types';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { read, write } from '../lib/storage';
+import { useScreenTop } from '../lib/useScreenTop';
 
 /**
  * E4 Match-reveal. The centrepiece engine.
@@ -81,6 +82,8 @@ export default function MatchGame({ deck, names, onExit }: Props) {
     setFirstAnswers(null);
     setPhase({ step: 'result', both, partial });
   }
+
+  useScreenTop(phase.step + (phase.step === 'sorting' ? String(phase.i) : ''));
 
   if (phase.step === 'rules') {
     return (
