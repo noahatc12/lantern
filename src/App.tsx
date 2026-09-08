@@ -246,21 +246,11 @@ export default function App() {
       </footer>
 
       {/*
-        The decisive test. Numbers told us env() reads 0; they cannot tell us
-        whether that is correct. The real question is whether content at the
-        bottom of the viewport gets obscured by the home indicator, and looking
-        at a marker pinned there answers it directly.
-
-        RAW sits at viewport bottom 0. SAFE sits above env(safe-area-inset-bottom).
-        If env() is 0 they overlap exactly. If RAW is cut off or sits under the
-        home indicator, we need a manual constant instead of trusting env().
+        The visual edge probes lived here. They did their job: they proved
+        env(safe-area-inset-bottom) is defined and reports 0 on iOS 18.7 while
+        the home indicator still covers content at bottom:0. Removed once the
+        shim in lib/safeArea.ts was confirmed on device. See docs/00-decisions.md D-011.
       */}
-      <div className="edge edge--safe">
-        <span>&#9650; CAN YOU READ THIS WHOLE LINE?</span>
-      </div>
-      <div className="edge edge--raw">
-        <span>control &mdash; expected to be covered</span>
-      </div>
     </main>
   );
 }
