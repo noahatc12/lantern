@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { applyLight, draw, ladderTier, mulberry32, shuffle, startSession } from './deck';
+import {
+  applyLight,
+  currentTier,
+  draw,
+  ladderTier,
+  mulberry32,
+  nextTurn,
+  poolProgress,
+  shuffle,
+  startSession,
+} from './deck';
 import type { Card, Deck, SessionConfig, Tier } from '../types';
 
 /**
@@ -206,5 +216,123 @@ describe('props filtering', () => {
       drawn: [] as string[],
     };
     expect(draw(deck, state, mulberry32(1)).card?.id).toBe('needs');
+  });
+});
+
+describe('ladder actually climbs (regression: it was capped at tier 1 forever)', () => {
+  it('reaches the ceiling over a full session rather than stalling at tier 1', () => {
+    const cards: Card[] = [];
+    for (let tier = 1; tier <= 5; tier++) {
+      for (let i = 0; i < 6; i++) cards.push(makeCard(`t${tier}-${i}`, tier as Tier));
+    }
+    const deck = makeDeck(cards);
+    const rng = mulberry32(3);
+    let state = {
+      ...startSession(config({ ladder: true, ladderStep: 3, maxTier: 5 })),
+      drawn: [] as string[],
+    };
+
+    const tiers = new Set<number>();
+    for (let i = 0; i < 25; i++) {
+      const res = draw(deck, state, rng);
+      if (!res.card) break;
+      tiers.add(res.card.tier);
+      state = res.state;
+    }
+
+    // The whole point of the ladder is that it MOVES. Seeing only tier 1 over
+    // 25 draws is the bug this test exists for.
+    expect(Math.max(...tiers)).toBe(5);
+    expect(tiers.size).toBeGreaterThan(1);
+  });
+});
+
+describe('ladder clock survives pool recycling (regression)', () => {
+  it('keeps climbing even when a small tier pool exhausts and recycles', () => {
+    // Only ONE tier-1 card, so the tier-1 pool recycles on the second draw.
+    // If the ladder clock were drawn.length, recycling would reset it to 1 and
+    // the session would be stuck at tier 1 forever.
+    const cards: Card[] = [makeCard('easy', 1)];
+    for (let t = 2; t <= 5; t++) {
+      for (let i = 0; i < 4; i++) cards.push(makeCard(`t${t}-${i}`, t as Tier));
+    }
+    const deck = makeDeck(cards);
+    const rng = mulberry32(11);
+    let state = {
+      ...startSession(config({ ladder: true, ladderStep: 2, maxTier: 5 })),
+      drawn: [] as string[],
+    };
+
+    const seenTiers = new Set<number>();
+    for (let i = 0; i < 16; i++) {
+      const res = draw(deck, state, rng);
+      if (!res.card) break;
+      seenTiers.add(res.card.tier);
+      state = res.state;
+    }
+    expect(Math.max(...seenTiers)).toBe(5);
+    expect(state.drawCount).toBe(16);
+  });
+});
+
+describe('turn ownership', () => {
+  it('drawing does NOT advance the turn, so a skip stays with the same person', () => {
+    const deck = makeDeck([makeCard('a', 1), makeCard('b', 1), makeCard('c', 1)]);
+    let state = { ...startSession(config()), drawn: [] as string[] };
+    expect(state.turn).toBe('a');
+
+    // Three consecutive draws, as a person skipping twice then keeping the third.
+    for (let i = 0; i < 3; i++) {
+      const res = draw(deck, state, mulberry32(i + 1));
+      state = res.state;
+      expect(state.turn).toBe('a');
+    }
+  });
+
+  it('nextTurn alternates and is the only thing that does', () => {
+    let state = { ...startSession(config()), drawn: [] as string[] };
+    expect(state.turn).toBe('a');
+    state = nextTurn(state);
+    expect(state.turn).toBe('b');
+    state = nextTurn(state);
+    expect(state.turn).toBe('a');
+  });
+});
+
+describe('currentTier', () => {
+  it('reports the tier a draw would actually use, not the ceiling', () => {
+    const cfg = config({ ladder: true, ladderStep: 3, maxTier: 5 });
+    const state = { ...startSession(cfg), drawn: [] as string[] };
+    // effectiveTier is the CEILING and stays at 5; the ladder position is what
+    // starts at 1 and climbs with progress.
+    expect(state.effectiveTier).toBe(5);
+    expect(currentTier(state)).toBe(1);
+    expect(currentTier({ ...state, drawCount: 3 })).toBe(2);
+    expect(currentTier({ ...state, drawCount: 30 })).toBe(5);
+  });
+
+  it('never exceeds a ceiling lowered by yellow', () => {
+    const cfg = config({ ladder: true, ladderStep: 1, maxTier: 5 });
+    let state = { ...startSession(cfg), drawCount: 20 };
+    state = applyLight(state, 'yellow');
+    state = applyLight(state, 'yellow');
+    expect(currentTier(state)).toBeLessThanOrEqual(state.effectiveTier);
+  });
+
+  it('is just the ceiling when the ladder is off', () => {
+    const state = { ...startSession(config({ maxTier: 4 })), drawn: [] as string[] };
+    expect(currentTier(state)).toBe(4);
+  });
+});
+
+describe('poolProgress', () => {
+  it('counts only cards inside the eligible pool', () => {
+    const deck = makeDeck([makeCard('a', 1), makeCard('b', 1), makeCard('hot', 5)]);
+    const state = {
+      ...startSession(config({ maxTier: 1 })),
+      drawn: ['a', 'hot'] as string[],
+    };
+    // 'hot' is above the ceiling so it is not part of the pool being tracked.
+    expect(poolProgress(deck, state)).toEqual({ seen: 1, total: 2 });
   });
 });

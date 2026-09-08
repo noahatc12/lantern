@@ -69,7 +69,7 @@ export function draw(deck: Deck, state: SessionState, rng: () => number): DrawRe
   if (state.light === 'red') return { card: null, state, recycled: false };
 
   const tier = state.config.ladder
-    ? (Math.min(ladderTier(state.config, state.drawn.length), state.effectiveTier) as Tier)
+    ? (Math.min(ladderTier(state.config, state.drawCount), state.effectiveTier) as Tier)
     : state.effectiveTier;
 
   const scoped: SessionState = { ...state, effectiveTier: tier };
@@ -90,11 +90,29 @@ export function draw(deck: Deck, state: SessionState, rng: () => number): DrawRe
   const picked = shuffle(unseen, rng)[0] as Card;
   const drawn = recycled ? [picked.id] : [...state.drawn, picked.id];
 
+  // Turn is NOT advanced here. Drawing and taking a turn are different events:
+  // a skip draws a replacement card for the SAME person, and folding the turn
+  // flip into draw() made skipping silently hand the phone over.
   return {
     card: picked,
-    state: { ...state, drawn, turn: state.turn === 'a' ? 'b' : 'a' },
+    state: { ...state, drawn, drawCount: state.drawCount + 1 },
     recycled,
   };
+}
+
+/** Advance to the other player. Called when a turn is actually finished. */
+export function nextTurn(state: SessionState): SessionState {
+  return { ...state, turn: state.turn === 'a' ? 'b' : 'a' };
+}
+
+/**
+ * The tier a draw would actually use right now. With the ladder on this is
+ * below the ceiling early in a session, so showing effectiveTier in the UI
+ * reads as "tier 5" while tier 1 cards are being drawn.
+ */
+export function currentTier(state: SessionState): Tier {
+  if (!state.config.ladder) return state.effectiveTier;
+  return Math.min(ladderTier(state.config, state.drawCount), state.effectiveTier) as Tier;
 }
 
 /** Yellow drops one tier and never goes below 1. Red ends the session. */
@@ -112,8 +130,14 @@ type TrafficLightInput = 'green' | 'yellow' | 'red';
 export function startSession(config: SessionConfig): SessionState {
   return {
     config,
-    effectiveTier: config.ladder ? 1 : config.maxTier,
+    // The CEILING, not the ladder position. Initialising this to 1 for ladder
+    // decks capped every session at tier 1 permanently, because nothing ever
+    // raised it while draw() took min(ladderPosition, effectiveTier). The
+    // ladder position is derived from progress; the ceiling is set by the
+    // players and only ever lowered, by yellow.
+    effectiveTier: config.maxTier,
     drawn: read<string[]>(`seen.${config.deckId}`, []),
+    drawCount: 0,
     turn: 'a',
     light: 'green',
     startedAt: Date.now(),
@@ -122,4 +146,16 @@ export function startSession(config: SessionConfig): SessionState {
 
 export function persistSeen(state: SessionState): void {
   write(`seen.${state.config.deckId}`, state.drawn);
+}
+
+/** Clears the no-repeat history so a deck plays fresh. */
+export function resetSeen(deckId: string): void {
+  write(`seen.${deckId}`, []);
+}
+
+/** How much of the eligible pool has been seen, for a progress readout. */
+export function poolProgress(deck: Deck, state: SessionState): { seen: number; total: number } {
+  const pool = eligible(deck, { ...state, effectiveTier: state.effectiveTier });
+  const ids = new Set(pool.map((c) => c.id));
+  return { seen: state.drawn.filter((id) => ids.has(id)).length, total: pool.length };
 }

@@ -1,22 +1,30 @@
 import { useState } from 'react';
 import type { Card, Deck } from '../types';
 import Handoff from '../components/Handoff';
-import { write } from '../lib/storage';
+import Rules from '../components/Rules';
+import { read, write } from '../lib/storage';
 
 /**
  * E4 Match-reveal. The centrepiece engine.
  *
  * THE INVARIANT: the app never writes the non-matching answers to disk. Both
- * raw lists live in component state during the run; when the second person
+ * raw maps live in component state during the run; when the second person
  * finishes, the intersection is computed and ONLY that is persisted. A "no"
- * that only one person gave stops existing the moment the match runs.
+ * that one person gave has nowhere to persist to, so it stops existing the
+ * moment the match runs.
  *
- * That is why the raw maps are local consts here rather than anything stored,
- * and why nothing calls write() until after the intersection exists.
+ * Nothing here calls write() before the overlap exists. That ordering is the
+ * guarantee.
  */
 
 type Choice = 'yes' | 'no' | 'maybe';
 type Answers = Record<string, Choice>;
+
+interface Saved {
+  at: number;
+  both: string[];
+  partial: string[];
+}
 
 interface Props {
   deck: Deck;
@@ -25,14 +33,18 @@ interface Props {
 }
 
 type Phase =
-  | { step: 'intro' }
+  | { step: 'rules' }
   | { step: 'sorting'; who: 0 | 1; i: number; answers: Answers }
-  | { step: 'handoff'; first: Answers }
+  | { step: 'handoff' }
   | { step: 'result'; both: Card[]; partial: Card[] };
 
 export default function MatchGame({ deck, names, onExit }: Props) {
-  const [phase, setPhase] = useState<Phase>({ step: 'intro' });
+  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
   const [firstAnswers, setFirstAnswers] = useState<Answers | null>(null);
+  const saved = read<Saved | null>(`match.${deck.id}`, null);
+
+  const byId = (ids: string[]) =>
+    ids.map((id) => deck.cards.find((c) => c.id === id)).filter((c): c is Card => Boolean(c));
 
   function choose(p: Extract<Phase, { step: 'sorting' }>, choice: Choice) {
     const answers = { ...p.answers, [deck.cards[p.i]!.id]: choice };
@@ -45,23 +57,22 @@ export default function MatchGame({ deck, names, onExit }: Props) {
 
     if (p.who === 0) {
       setFirstAnswers(answers);
-      setPhase({ step: 'handoff', first: answers });
+      setPhase({ step: 'handoff' });
       return;
     }
 
-    // Second person done. Compute the intersection, then let both raw maps fall
-    // out of scope. Nothing but the overlap is ever written.
     const a = firstAnswers ?? {};
-    const b = answers;
     const both: Card[] = [];
     const partial: Card[] = [];
     for (const card of deck.cards) {
       const x = a[card.id];
-      const y = b[card.id];
-      if (x === 'no' || y === 'no' || !x || !y) continue;
+      const y = answers[card.id];
+      if (!x || !y || x === 'no' || y === 'no') continue;
       if (x === 'yes' && y === 'yes') both.push(card);
       else partial.push(card);
     }
+
+    // Only the overlap is written. Both raw maps go out of scope here.
     write(`match.${deck.id}`, {
       at: Date.now(),
       both: both.map((c) => c.id),
@@ -71,32 +82,30 @@ export default function MatchGame({ deck, names, onExit }: Props) {
     setPhase({ step: 'result', both, partial });
   }
 
-  if (phase.step === 'intro') {
+  if (phase.step === 'rules') {
     return (
-      <main className="play">
-        <header className="play__top">
-          <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
-          </button>
-          <span className="play__deck">{deck.title}</span>
-        </header>
-        <section className="play__stage">
-          <p className="card card--quiet">
-            One of you sorts the whole deck alone, then hands the phone over. The app
-            shows only what you both said yes or maybe to.
-          </p>
-          <p className="play__note">
-            Anything either of you says no to is never shown, and never written down.
-            Take it to another room.
-          </p>
+      <Rules
+        deck={deck}
+        onExit={onExit}
+        onStart={() => setPhase({ step: 'sorting', who: 0, i: 0, answers: {} })}
+        startLabel={`${names[0]} sorts first`}
+      >
+        <p className="play__note">{deck.cards.length} cards to sort. Takes a few minutes.</p>
+        {saved && (
           <button
-            className="btn btn--primary btn--big"
-            onClick={() => setPhase({ step: 'sorting', who: 0, i: 0, answers: {} })}
+            className="btn btn--ghost"
+            onClick={() =>
+              setPhase({
+                step: 'result',
+                both: byId(saved.both),
+                partial: byId(saved.partial),
+              })
+            }
           >
-            {names[0]} starts
+            See your last result
           </button>
-        </section>
-      </main>
+        )}
+      </Rules>
     );
   }
 
@@ -111,17 +120,25 @@ export default function MatchGame({ deck, names, onExit }: Props) {
 
   if (phase.step === 'sorting') {
     const card = deck.cards[phase.i]!;
+    const pct = Math.round((phase.i / deck.cards.length) * 100);
     return (
       <main className="play">
         <header className="play__top">
-          <button className="play__back" onClick={onExit} aria-label="Leave, discarding this sort">
+          <button
+            className="play__back"
+            onClick={onExit}
+            aria-label="Leave, discarding this sort"
+          >
             &larr;
           </button>
-          <span className="play__deck">{names[phase.who]}</span>
+          <span className="play__deck">{names[phase.who]}, alone</span>
           <span className="play__tier">
             {phase.i + 1} / {deck.cards.length}
           </span>
         </header>
+        <div className="bar" aria-hidden="true">
+          <div className="bar__fill" style={{ width: `${pct}%` }} />
+        </div>
         <section className="play__stage">
           <p className="card">{card.text}</p>
           <div className="sort">
@@ -135,7 +152,10 @@ export default function MatchGame({ deck, names, onExit }: Props) {
               Yes
             </button>
           </div>
-          <p className="play__note">Nobody sees this but you, unless you both said yes.</p>
+          <p className="play__note">
+            Only shown if you both said yes or maybe. A no from either of you is never
+            revealed and never saved.
+          </p>
         </section>
       </main>
     );
@@ -173,8 +193,15 @@ export default function MatchGame({ deck, names, onExit }: Props) {
         )}
 
         <p className="play__note">
-          Everything else is gone. It was never written down.
+          Everything else is gone. It was never written down. This result is saved so you
+          can come back to it.
         </p>
+        <button
+          className="btn"
+          onClick={() => setPhase({ step: 'sorting', who: 0, i: 0, answers: {} })}
+        >
+          Run it again
+        </button>
       </section>
     </main>
   );

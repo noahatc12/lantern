@@ -60,9 +60,21 @@ export type TrafficLight = 'green' | 'yellow' | 'red';
 
 export interface SessionState {
   config: SessionConfig;
-  /** Current effective ceiling, which yellow can lower below config.maxTier. */
+  /**
+   * The session CEILING, which yellow can lower below config.maxTier.
+   * This is not the ladder position: with the ladder on, the tier a draw
+   * actually uses is min(ladderPosition, effectiveTier). See currentTier().
+   */
   effectiveTier: Tier;
+  /** No-repeat history. RESET when the pool recycles, so it is not a clock. */
   drawn: string[];
+  /**
+   * Monotonic count of draws this session. Separate from `drawn` on purpose:
+   * `drawn` is cleared when the pool recycles, and using it as the ladder clock
+   * meant a small tier-1 pool exhausting would reset the ladder to step one,
+   * so a session could never climb out of tier 1.
+   */
+  drawCount: number;
   turn: Player;
   light: TrafficLight;
   startedAt: number;
