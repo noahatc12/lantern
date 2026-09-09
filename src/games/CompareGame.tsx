@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { Card, Deck, Tier } from '../types';
 import { mulberry32, playable, shuffle } from '../lib/deck';
 import Handoff from '../components/Handoff';
+import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -61,13 +62,11 @@ export default function CompareGame({ deck, names, maxTier, availableProps, onEx
 
   if (!card) {
     return (
-      <main className="stopped">
-        <h1 className="stopped__title">That is all of them.</h1>
-        <p className="stopped__body">Raise the ceiling for more, or come back another night.</p>
-        <button className="btn" onClick={onExit}>
-          Back
-        </button>
-      </main>
+      <Empty
+        title="That is all of them."
+        body="Raise the ceiling for more, or come back another night."
+        onExit={onExit}
+      />
     );
   }
 

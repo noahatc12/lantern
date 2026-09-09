@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Deck } from '../types';
-import { RULES } from '../lib/rules';
+import { rulesFor } from '../lib/rules';
+import { useNoteStart } from '../lib/started';
 
 /**
  * The how-to-play screen every game opens on, restyled to the canvas.
@@ -25,11 +26,12 @@ interface Props {
 }
 
 export default function Rules({ deck, onStart, onExit, children, startLabel }: Props) {
-  const rules = RULES[deck.engine];
+  const rules = rulesFor(deck);
   const [notesOpen, setNotesOpen] = useState(false);
+  const noteStart = useNoteStart();
 
   return (
-    <main className="play play--rules">
+    <main className="play play--rules" data-screen={`rules.${deck.id}`}>
       <button className="play__back play__back--solo" onClick={onExit} aria-label="Back">
         &larr;
       </button>
@@ -73,7 +75,13 @@ export default function Rules({ deck, onStart, onExit, children, startLabel }: P
         )}
 
         <div className="rules__actions">
-          <button className="btn btn--primary btn--big" onClick={onStart}>
+          <button
+            className="btn btn--primary btn--big"
+            onClick={() => {
+              noteStart(deck.id);
+              onStart();
+            }}
+          >
             {startLabel ?? 'Start'}
           </button>
           {children}

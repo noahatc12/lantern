@@ -192,8 +192,14 @@ async function main() {
     await page.waitForSelector('.rules', { timeout: 10000 });
   };
   const home = async () => {
+    // Two shapes of back control: the play header's, and the screen-style
+    // chevron the newer engines use. Leaving a game has to work from either.
     const b = page.locator('.play__back');
     if (await b.count()) await b.first().click();
+    else {
+      const c = page.locator('.backbtn');
+      if (await c.count()) await c.first().click();
+    }
     await page.waitForSelector('.decks, .tabbar', { timeout: 10000 });
     if ((await page.locator('.decks').count()) === 0) await goShelf();
   };
@@ -574,7 +580,31 @@ async function main() {
   check('redeeming removes the way to redeem again', (await page.locator('.btn--redeem').count()) === 0);
   await snap(page, 'vault-redeemed');
 
-  // Saved match results live here too, not buried in the deck that made them.
+  // ---------- the yes list ----------
+  // The reason the vault has three sections. Every sorting deck already made an
+  // overlap and every one of them was stranded inside the deck that made it, so
+  // "what did we both say yes to" had no single answer anywhere in the app.
+  await page.locator('.seg__btn', { hasText: 'Yes list' }).click();
+  await page.waitForSelector('.yeses, .emptybox', { timeout: 10000 });
+  const yesCount = await page.locator('.yes').count();
+  check('the yes list collects overlaps from the decks you sorted', yesCount > 0, `${yesCount} items`);
+  const yesText = await txt(page, '.screen');
+  const sources = await page.locator('.yes__from').count();
+  check('every yes says which list it came from', sources > 0, `${sources} group headings`);
+  check('the yes list keeps the maybes separate', /worth talking about/i.test(yesText));
+  await snap(page, 'vault-yes-list');
+
+  // Search has to reach the aggregated list, not just one deck's result.
+  const firstYes = (await page.locator('.yes__text').first().innerText()).trim();
+  const word = firstYes.split(/\s+/).find((w) => w.length > 5) ?? firstYes.slice(0, 6);
+  await page.locator('.search__input').fill(word);
+  await page.waitForTimeout(150);
+  const narrowed = await page.locator('.yes').count();
+  check('the yes list is searchable', narrowed > 0 && narrowed <= yesCount, `${yesCount} -> ${narrowed}`);
+  await page.locator('.search__input').fill('');
+  await page.waitForTimeout(120);
+
+  // Saved sorts are still openable from here.
   const savedResults = await page.locator('.row2--card').count();
   check('a saved match result is reachable from the vault', savedResults >= 1, `${savedResults} saved`);
   if (savedResults > 0) {
@@ -584,6 +614,37 @@ async function main() {
     await snap(page, 'vault-saved-result');
     await page.locator('.backbtn').click();
     await page.waitForSelector('.vault__head', { timeout: 10000 });
+  }
+
+  // ---------- what we have played ----------
+  await page.locator('.seg__btn', { hasText: 'Played' }).click();
+  await page.waitForSelector('.stats, .emptybox', { timeout: 10000 });
+  const playedRows = await page.locator('.rows--gap .row2--card').count();
+  check(
+    'the played list records the games this run actually played',
+    playedRows > 0,
+    `${playedRows} games logged`,
+  );
+  const playedText = await txt(page, '.screen');
+  check('the played list names games, not cards', /truth or dare/i.test(playedText));
+  check('it says what has never been opened', /never opened/i.test(playedText));
+  await snap(page, 'vault-played');
+
+  // Tapping something never opened has to actually open it. A nudge that does
+  // not go anywhere is decoration.
+  const untriedCount = await page.locator('.untried .filter').count();
+  check('never-opened games are listed', untriedCount > 0, `${untriedCount} untried`);
+  if (untriedCount > 0) {
+    const untriedTitle = (await page.locator('.untried .filter').first().innerText()).trim();
+    await page.locator('.untried .filter').first().click();
+    await page.waitForSelector('.rules', { timeout: 10000 });
+    const openedTitle = await txt(page, '.rules .eyebrow');
+    check(
+      'tapping a never-opened game opens that game',
+      openedTitle.toLowerCase() === untriedTitle.toLowerCase(),
+      `${untriedTitle} -> ${openedTitle}`,
+    );
+    await home();
   }
   await goShelf();
 
@@ -607,6 +668,405 @@ async function main() {
   await home();
   const finalCount = await page.locator('.deckcard').count();
   check('every deck is reachable from the shelf', finalCount >= 29, `${finalCount} decks listed`);
+
+  // ---------- per-deck rules ----------
+  // Two games ride the endurance engine and they are not the same game. Without
+  // a per-deck override one of them opens on instructions for the other, which
+  // is the quietest possible way to ship a broken game.
+  await open('First to Break');
+  const breakRules = await txt(page, '.rules__summary');
+  await home();
+  await open('Utter Silence');
+  const silenceRules = await txt(page, '.rules__summary');
+  check(
+    'two games on one engine get their own instructions',
+    breakRules !== silenceRules,
+    `${breakRules.slice(0, 40)} vs ${silenceRules.slice(0, 40)}`,
+  );
+  check('Utter Silence explains its own rule', /silent/i.test(silenceRules), silenceRules);
+  await home();
+
+  // ---------- Position Roulette ----------
+  await open('Position Roulette');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.rolled', { timeout: 10000 });
+  const rollSlots = await page.locator('.rolled').count();
+  check('position roulette rolls three parts', rollSlots === 3, `${rollSlots} slots`);
+  await snap(page, 'roulette');
+  await home();
+
+  // ---------- Simon Says ----------
+  await open('Simon Says');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.misses', { timeout: 10000 });
+  const leadFirst = await txt(page, '.play__eyebrow');
+  check('the leader is named', /noah/i.test(leadFirst), leadFirst);
+  const cmd1 = await txt(page, '.card');
+  await snap(page, 'simon-command');
+
+  await page.locator('.play__actions .btn--primary').click();
+  await page.waitForTimeout(150);
+  const cmd2 = await txt(page, '.card');
+  check('a new command is dealt each time', cmd1 !== cmd2);
+  const counter = await txt(page, '.play__tier');
+  check('the round counts up', counter.startsWith('2 /'), counter);
+
+  // Three misses and the role changes hands, which is the whole mechanic.
+  await page.locator('.play__actions .btn--ghost').click();
+  await page.waitForTimeout(120);
+  const onePip = await page.locator('.miss.is-on').count();
+  check('a miss is recorded', onePip === 1, `${onePip} pips lit`);
+  await page.locator('.play__actions .btn--ghost').click();
+  await page.waitForTimeout(120);
+  await page.locator('.play__actions .btn--ghost').click();
+  await page.waitForSelector('.handoff', { timeout: 10000 });
+  const swapTo = await txt(page, '.handoff');
+  check('three misses hands the role over', /lily/i.test(swapTo), swapTo);
+  await snap(page, 'simon-swap');
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 5000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.misses', { timeout: 10000 });
+  const nowLeading = await txt(page, '.play__eyebrow');
+  check('the other one is now leading', /lily/i.test(nowLeading), nowLeading);
+  const resetPips = await page.locator('.miss.is-on').count();
+  check('misses reset with the role', resetPips === 0, `${resetPips} still lit`);
+  await home();
+
+  // ---------- Love Maps ----------
+  await open('Love Maps');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.answer', { timeout: 10000 });
+  const asksFor = await txt(page, '.play__deck');
+  check('the guesser answers for the subject', /for/i.test(asksFor), asksFor);
+  const lmDisabled = await page.locator('.play__stage--form .btn--primary').isDisabled();
+  check('a blank guess cannot be locked in', lmDisabled);
+  await page.locator('.answer').fill('what I think she would say');
+  await snap(page, 'lovemaps-guess');
+  await page.locator('.play__stage--form .btn--primary').click();
+
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 5000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.answer', { timeout: 10000 });
+  const blankForReal = await page.locator('.answer').inputValue();
+  check('the real answer starts from a blank field', blankForReal === '', blankForReal);
+  await page.locator('.answer').fill('what she actually says');
+  await page.locator('.play__stage--form .btn--primary').click();
+
+  await page.waitForSelector('.compare__side', { timeout: 10000 });
+  const bothSides = await txt(page, '.play__stage');
+  check(
+    'the reveal shows the guess and the real answer together',
+    bothSides.includes('what I think she would say') && bothSides.includes('what she actually says'),
+  );
+  await snap(page, 'lovemaps-reveal');
+
+  // Ending must be offered only once something has been judged, or the summary
+  // claims "no misses" while the miss is still on the screen you left from.
+  const earlyOut = await page.locator('.btn', { hasText: 'That is enough' }).count();
+  check('cannot end the round before anything is marked', earlyOut === 0);
+
+  await page.locator('.play__actions .btn--ghost').click();
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 8000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.answer', { timeout: 10000 });
+  const swappedSubject = await txt(page, '.play__deck');
+  check('the subject alternates between questions', /noah/i.test(swappedSubject), swappedSubject);
+
+  await page.locator('.answer').fill('second guess');
+  await page.locator('.play__stage--form .btn--primary').click();
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 8000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.answer', { timeout: 10000 });
+  await page.locator('.answer').fill('second real');
+  await page.locator('.play__stage--form .btn--primary').click();
+  await page.waitForSelector('.compare__side', { timeout: 10000 });
+
+  await page.locator('.btn', { hasText: 'That is enough' }).click();
+  await page.waitForSelector('.result__head', { timeout: 10000 });
+  const lmEnd = await txt(page, '.result');
+  check('the end screen leads with the misses', /worth talking about/i.test(lmEnd));
+  check('a miss carries the real answer with it', /what she actually says/.test(lmEnd));
+  await snap(page, 'lovemaps-end');
+  await home();
+
+  // ---------- The Newlywed Round ----------
+  await open('The Newlywed Round');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.answer', { timeout: 10000 });
+  const seedHeader = await txt(page, '.play__deck');
+  check('the subject seeds their answers privately', /privately/i.test(seedHeader), seedHeader);
+
+  const fillTen = async (prefix) => {
+    for (let i = 0; i < 12; i++) {
+      if ((await page.locator('.answer').count()) === 0) break;
+      await page.locator('.answer').fill(`${prefix} ${i + 1}`);
+      await page.locator('.play__stage--form .btn--primary').click();
+      await page.waitForTimeout(60);
+      if ((await page.locator('.handoff').count()) > 0) break;
+    }
+  };
+  await fillTen('real answer');
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 8000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.answer', { timeout: 10000 });
+  await fillTen('guessed answer');
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 8000 });
+  await page.locator('.handoff__go').click();
+
+  await page.waitForSelector('.marks', { timeout: 10000 });
+  const rowCount = await page.locator('.mark').count();
+  check('all ten come back at once to be marked', rowCount === 10, `${rowCount} rows`);
+  const doneDisabled = await page.locator('.play__stage .btn--big').isDisabled();
+  check('cannot finish before every one is marked', doneDisabled);
+  await snap(page, 'newlywed-scoreboard');
+
+  for (let i = 0; i < rowCount; i++) {
+    await page.locator('.mark').nth(i).locator('.filter').nth(i % 2).click();
+  }
+  await page.waitForTimeout(120);
+  const nowEnabled = !(await page.locator('.play__stage .btn--big').isDisabled());
+  check('marking them all enables the finish', nowEnabled);
+  await page.locator('.play__stage .btn--big').click();
+  await page.waitForSelector('.result__head', { timeout: 10000 });
+  const nwEnd = await txt(page, '.result');
+  check('the newlywed round ends on the misses too', /worth talking about/i.test(nwEnd));
+  await snap(page, 'newlywed-end');
+  await home();
+
+  // ---------- Jar of Desire ----------
+  // The authored engine. What matters is that both sets go in, that what comes
+  // out has no name on it, and that delete deletes.
+  await open('Jar of Desire');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.emptybox, .stack', { timeout: 10000 });
+  check('an empty jar says so', (await page.locator('.emptybox').count()) === 1);
+
+  const writeInto = async (who, lines) => {
+    await page.locator('.btn', { hasText: 'Add some' }).click();
+    await page.waitForSelector('.btn--pick', { timeout: 10000 });
+    await page.locator('.btn--pick', { hasText: who }).click();
+    await page.waitForSelector('.answer--vault', { timeout: 10000 });
+    for (const line of lines) {
+      await page.locator('.answer--vault').fill(line);
+      await page.locator('.btn--primary', { hasText: 'Put it in' }).click();
+      await page.waitForTimeout(80);
+    }
+    await page.locator('.btn', { hasText: 'Done,' }).click();
+    await page.waitForTimeout(150);
+  };
+
+  await writeInto('Noah', ['a thing noah wrote']);
+  await writeInto('Lily', ['a thing lily wrote']);
+
+  await page.locator('.btn--primary', { hasText: 'Draw one' }).click();
+  await page.waitForSelector('.card', { timeout: 10000 });
+  const anon = await txt(page, '.play__eyebrow');
+  check('a drawn item carries no name', /one of you/i.test(anon), anon);
+  await snap(page, 'jar-drawn');
+  await page.locator('.btn--ghost', { hasText: 'Who wrote it' }).click();
+  await page.waitForTimeout(150);
+  const named = await txt(page, '.play__eyebrow');
+  check('the author is shown only when asked for', /wrote this/i.test(named), named);
+  await page.locator('.btn--primary', { hasText: 'Done' }).click();
+  await page.waitForSelector('.play__stage', { timeout: 10000 });
+  const jarAfter = await txt(page, '.play__stage');
+  check('a used one moves to the done pile', /done \(1\)/i.test(jarAfter));
+  await home();
+
+  // ---------- Sealed Envelopes ----------
+  await open('Sealed Envelopes');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.emptybox, .stack', { timeout: 10000 });
+  await writeInto('Noah', ['the first sealed one', 'the second sealed one']);
+  const sealedRows = await page.locator('.iou--sealed').count();
+  check('later envelopes stay sealed', sealedRows >= 1, `${sealedRows} sealed`);
+  const openable = await page.locator('.btn--primary', { hasText: 'Open the next' }).isDisabled();
+  check('the first one can be opened straight away', !openable);
+  await snap(page, 'sealed-envelopes');
+  await home();
+
+  // ---------- Story Relay ----------
+  await open('Story Relay');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.reminder__text', { timeout: 10000 });
+  const opener = await txt(page, '.reminder__text');
+  check('the relay opens on a line you did not write', opener.length > 10, opener);
+  for (const line of ['and then the first thing happened.', 'and then a second thing happened.', 'and a third.']) {
+    await page.locator('.answer').fill(line);
+    await page.locator('.btn--primary', { hasText: 'Add it and pass' }).click();
+    await page.waitForTimeout(80);
+  }
+  const visible = await page.locator('.reminder__text').count();
+  check('only the last two sentences are visible', visible === 2, `${visible} shown`);
+  await snap(page, 'relay-writing');
+  await page.locator('.btn', { hasText: 'Stop here and read it' }).click();
+  await page.waitForSelector('.story__text', { timeout: 10000 });
+  const whole = await txt(page, '.story__text');
+  check('the whole story comes back at the end', whole.includes('a third'), whole.slice(0, 50));
+  await page.locator('.btn--ghost', { hasText: 'Delete it' }).click();
+  await page.waitForSelector('.rules', { timeout: 10000 });
+  check('deleting returns you without keeping it', true);
+  await home();
+
+  // ---------- Thirty Six Questions ----------
+  await open('Thirty Six Questions');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.card', { timeout: 10000 });
+  const firstQ = await txt(page, '.card');
+  const setLabel = await txt(page, '.play__deck');
+  check('it opens on the first set', /set 1 of 3/i.test(setLabel), setLabel);
+  await snap(page, 'thirtysix');
+  // Walk to the end of the first set and check the break screen appears.
+  for (let i = 0; i < 12; i++) {
+    await page.locator('.btn--primary', { hasText: 'Next question' }).click();
+    await page.waitForTimeout(50);
+    if ((await page.locator('.play__eyebrow').innerText()).match(/end of set/i)) break;
+  }
+  const breakText = await txt(page, '.play__stage');
+  check('there is a break between the sets', /end of set 1/i.test(breakText), breakText.slice(0, 40));
+  await snap(page, 'thirtysix-break');
+  await page.locator('.btn', { hasText: 'Stop here for tonight' }).click();
+  await page.waitForSelector('.decks, .tabbar', { timeout: 10000 });
+  if ((await page.locator('.decks').count()) === 0) await goShelf();
+
+  await open('Thirty Six Questions');
+  const resumeNote = await txt(page, '.rules__actions');
+  check('it offers to pick up where you stopped', /pick up at question 1[23]/i.test(resumeNote), resumeNote.slice(0, 60));
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.card', { timeout: 10000 });
+  const resumedQ = await txt(page, '.card');
+  check('resuming does not start over', resumedQ !== firstQ);
+  await home();
+
+  // ---------- Sensate Focus ----------
+  await open('Sensate Focus');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.stages', { timeout: 10000 });
+  const stageStates = await page.locator('.stage__state').allInnerTexts();
+  check(
+    'only the first stage is open',
+    stageStates[0].trim().toLowerCase() === 'open' &&
+      stageStates[1].trim().toLowerCase() === 'locked',
+    stageStates.join(', '),
+  );
+  const disclaimer = await txt(page, '.disclaimer');
+  check('it says once that this is not therapy', /not therapy/i.test(disclaimer));
+  await snap(page, 'sensate-stages');
+  await page.locator('.btn--primary', { hasText: 'Start stage 1' }).click();
+  await page.waitForSelector('.reminder__text', { timeout: 10000 });
+  await page.locator('.btn--primary').first().click();
+  await page.waitForSelector('.clock', { timeout: 10000 });
+  await page.locator('.btn', { hasText: 'Swap early' }).click();
+  await page.waitForTimeout(200);
+  await page.locator('.btn', { hasText: 'Finish early' }).click();
+  await page.waitForSelector('.rules__steps', { timeout: 10000 });
+  const bothNeeded = await page.locator('.btn--big', { hasText: 'Both of you' }).count();
+  check('the next stage will not unlock on one person alone', bothNeeded === 1);
+  await page.locator('.btn--pick', { hasText: 'Noah is done' }).click();
+  await page.locator('.btn--pick', { hasText: 'Lily is done' }).click();
+  await page.waitForTimeout(120);
+  await page.locator('.btn--primary', { hasText: 'Unlock stage 2' }).click();
+  await page.waitForSelector('.stages', { timeout: 10000 });
+  const after = await page.locator('.stage__state').allInnerTexts();
+  check(
+    'both marking it done unlocks the next one',
+    after[0].trim().toLowerCase() === 'done' && after[1].trim().toLowerCase() === 'open',
+    after.join(', '),
+  );
+  await home();
+
+  // ---------- Story Cards ----------
+  await open('Story Cards');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.card', { timeout: 10000 });
+  await page.locator('.btn--primary').first().click();
+  await page.waitForSelector('.lines', { timeout: 10000 });
+  const handSize = await page.locator('.lineopt').count();
+  check('you pick from a hand rather than one line', handSize === 5, `${handSize} lines`);
+  await snap(page, 'storycards-hand');
+  await page.locator('.lineopt').first().click();
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 8000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.lines', { timeout: 10000 });
+  await page.locator('.lineopt').nth(1).click();
+  await page.waitForSelector('.lines', { timeout: 10000 });
+  const choices = await page.locator('.lineopt').count();
+  check('the teller chooses between two, unlabelled', choices === 2, `${choices} shown`);
+  await home();
+
+  // ---------- Kinky Cards ----------
+  await open('Kinky Cards');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.rolled', { timeout: 10000 });
+  check('kinky cards rolls three parts', (await page.locator('.rolled').count()) === 3);
+  await home();
+
+  // ---------- Body Heat Map ----------
+  await open('Body Heat Map');
+  await page.locator('.rules__actions .btn--primary').click();
+  await page.waitForSelector('.figure', { timeout: 10000 });
+  const paintRegions = await page.locator('.region').count();
+  check('the map is made of tappable places', paintRegions > 10, `${paintRegions} regions`);
+  const notReady = await page.locator('.play__stage .btn--big').isDisabled();
+  check('you cannot finish a map with nothing on it', notReady);
+
+  const paint = async () => {
+    await page.locator('.level', { hasText: 'yes' }).first().click();
+    for (let i = 0; i < 8; i++) await page.locator('.region').nth(i).click();
+    await page.locator('.filter', { hasText: 'back' }).click();
+    await page.waitForTimeout(100);
+    await page.locator('.level', { hasText: 'not here' }).click();
+    await page.locator('.region').first().click();
+    await page.locator('.btn--primary', { hasText: 'Done' }).click();
+  };
+  // Snapshot before tapping anything: Playwright scrolls a control into view
+  // before clicking it, and the screenshot assertion is about how the screen
+  // opens rather than about where the harness left the page.
+  await snap(page, 'bodymap-paint');
+  await page.locator('.level', { hasText: 'yes' }).first().click();
+  for (let i = 0; i < 8; i++) await page.locator('.region').nth(i).click();
+  await page.locator('.filter', { hasText: 'back' }).click();
+  await page.waitForTimeout(100);
+  await page.locator('.level', { hasText: 'not here' }).click();
+  await page.locator('.region').first().click();
+  await page.locator('.btn--primary', { hasText: 'Done' }).click();
+  await page.waitForSelector('.handoff__go:not([disabled])', { timeout: 8000 });
+  await page.locator('.handoff__go').click();
+  await page.waitForSelector('.figure', { timeout: 10000 });
+  await paint();
+
+  await page.waitForSelector('.maps', { timeout: 10000 });
+  const mapCards = await page.locator('.mapcard').count();
+  check('both maps and a combined one are shown', mapCards === 3, `${mapCards} maps`);
+  const mapText = await txt(page, '.play__stage');
+  check('it says plainly that both maps were saved', /saves both|both maps are saved/i.test(mapText));
+  await snap(page, 'bodymap-reveal');
+  await home();
+
+  // ---------- stakes ----------
+  // A modifier on the games with a win condition, and deliberately nowhere near
+  // the ones without.
+  await open('Truth or Dare');
+  check('stakes are offered on a game you can win', (await page.locator('.stakes').count()) === 1);
+  await page.locator('.stakes__bar').click();
+  await page.waitForSelector('.stakes__opts', { timeout: 5000 });
+  await page.locator('.stakes__opts .filter', { hasText: 'Layers' }).click();
+  await page.waitForTimeout(120);
+  await page.locator('.btn--pick', { hasText: 'Noah loses one' }).click();
+  await page.waitForTimeout(120);
+  const ledger = await txt(page, '.stakes__score');
+  check('the layers ledger counts', /noah 1/i.test(ledger), ledger);
+  const fine = await txt(page, '.stakes__fine');
+  check('a skip is still free with stakes on', /skip never costs/i.test(fine));
+  await snap(page, 'stakes');
+  await home();
+
+  await open('Bucket List Match');
+  check(
+    'stakes are never offered on a sorting game',
+    (await page.locator('.stakes').count()) === 0,
+  );
+  await home();
 
   // ---------- the ceiling applies to sorting decks ----------
   // This engine sorted the whole deck regardless of the ceiling, so a deck

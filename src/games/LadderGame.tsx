@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Deck, Tier } from '../types';
 import { playable } from '../lib/deck';
+import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -67,11 +68,21 @@ export default function LadderGame({ deck, names, maxTier, availableProps, onExi
     );
   }
 
-  if (ended || !card) {
+  if (!card) {
+    return (
+      <Empty
+        title="That was the last rung."
+        body="Raise the ceiling for more, or come back another night."
+        onExit={onExit}
+      />
+    );
+  }
+
+  if (ended) {
     return (
       <main className="stopped">
         <h1 className="stopped__title">
-          {ended ? `You stopped at rung ${i + 1}.` : 'That was the last rung.'}
+          You stopped at rung {i + 1}.
         </h1>
         <p className="stopped__body">
           No score, and no record of who called it.

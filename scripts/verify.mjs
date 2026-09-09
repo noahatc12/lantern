@@ -76,6 +76,24 @@ async function main() {
     process.exit(0);
   }
 
+  // Refuse to start on a port something is already serving.
+  //
+  // Two overlapping verify runs share this port, one server wins, and when the
+  // loser is cleaned up it takes the survivor's server with it. The browser half
+  // then reports the app as broken when the only broken thing is the harness.
+  // That already cost a debugging session, so it fails loudly now.
+  try {
+    const probe = await fetch(BASE);
+    if (probe.ok) {
+      console.error(`
+Something is already serving ${BASE}.`);
+      console.error('Another verify or preview is running. Stop it and try again.');
+      process.exit(1);
+    }
+  } catch {
+    // Nothing there, which is what we want.
+  }
+
   // Serve the freshly built app with the real bundle beside it.
   copyFileSync('public/content.enc', 'dist/content.enc');
 

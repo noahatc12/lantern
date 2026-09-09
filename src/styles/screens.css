@@ -1023,3 +1023,628 @@
   letter-spacing: -0.03em;
   line-height: 1;
 }
+
+/* ---------- vault sections ---------- */
+
+.seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 16px 0 20px;
+  border: 1px solid var(--line-soft);
+  border-radius: 22px;
+  background: var(--panel-1);
+}
+
+.seg__btn {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seg__btn.is-on {
+  background: var(--panel-3);
+  color: var(--ink);
+}
+
+/* Three numbers that answer "how much of this is there" before any list is
+   read. The word variant exists because "2h 40m" is not a numeral and looked
+   broken at the numeral size. */
+.stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.stat {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--panel-1);
+  text-align: center;
+}
+
+.stat__n {
+  display: block;
+  font-family: var(--serif);
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__n--word {
+  font-size: 19px;
+  padding: 3px 0 4px;
+}
+
+.stat__label {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+}
+
+/* The yes list itself. Ruled rather than boxed: this is meant to be read
+   straight down, and forty cards in forty boxes is a filing cabinet. */
+.yeses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.yes {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.yes__text {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.yes--maybe .yes__text {
+  color: var(--ink-mid);
+}
+
+.yes__deck {
+  flex-shrink: 0;
+  max-width: 34%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Games you have never opened, as tappable chips. Small on purpose: this is a
+   nudge, not a second shelf. */
+.untried {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+/* Which list a run of yeses came from. Shown only when the screen holds more
+   than one, because a single-source list labelled on every row is noise. */
+.yes__from {
+  margin: 18px 0 0;
+  color: var(--accent);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.saved__unit {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-dim);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.row2--card .saved__count {
+  text-align: right;
+}
+
+/* ---------- leader ---------- */
+
+/* Misses, as pips. A number alone reads as a score; three dots that fill up
+   read as a countdown to the role changing hands, which is what it is. */
+.misses {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.miss {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+}
+
+.miss.is-on {
+  border-color: var(--bad);
+  background: var(--bad);
+}
+
+.misses__label {
+  margin-left: 5px;
+  color: var(--ink-dim);
+  font-size: 11.5px;
+}
+
+/* A prompt from the app about how the game is going, not about the content. */
+.nudge {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  background: var(--panel-1);
+  color: var(--ink-quiet);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- quiz ---------- */
+
+.marks {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mark {
+  padding: 16px 16px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--panel-1);
+}
+
+.mark__q {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.mark__pair {
+  margin: 0 0 4px;
+  color: var(--ink-mid);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.mark__label {
+  display: inline-block;
+  min-width: 62px;
+  color: var(--ink-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mark__btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mark__btns .filter {
+  flex: 1;
+  justify-content: center;
+  text-align: center;
+}
+
+/* A miss on the end screen carries the real answer with it. The question alone
+   is only half of what you need to talk about. */
+.miss__q {
+  display: block;
+}
+
+.miss__a {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-quiet);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+/* ---------- authored content ---------- */
+
+.disclaimer {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border-left: 2px solid var(--info);
+  border-radius: 0 12px 12px 0;
+  background: var(--panel-1);
+  color: var(--ink-mid);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ---------- relay ---------- */
+
+.cap {
+  margin: 6px 0 14px;
+  color: var(--ink-dim);
+  font-size: 11.5px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cap.is-low {
+  color: var(--bad);
+}
+
+.story {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--panel-1);
+}
+
+.story__text {
+  margin: 8px 0 14px;
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ---------- staged ---------- */
+
+.stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stage {
+  padding: 16px 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--panel-1);
+  opacity: 0.55;
+}
+
+.stage.is-open,
+.stage.is-done {
+  opacity: 1;
+}
+
+.stage.is-open {
+  border-color: var(--accent-line);
+}
+
+.stage__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.stage__n {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.stage__title {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 18px;
+}
+
+.stage__state {
+  color: var(--ink-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stage.is-done .stage__state {
+  color: var(--ok);
+}
+
+.stage__rule {
+  margin: 0 0 12px;
+  color: var(--ink-mid);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---------- story cards ---------- */
+
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.lineopt {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-1);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lineopt:active {
+  border-color: var(--accent);
+}
+
+/* ---------- body map ---------- */
+
+/* One scrolling row rather than a wrap. Five chips wrapped four-and-one, which
+   made the fifth read as a separate thing rather than the top of the scale. */
+.levels {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 7px;
+  margin: 0 -20px 14px;
+  padding: 0 20px 2px;
+}
+
+.levels::-webkit-scrollbar {
+  display: none;
+}
+
+.level {
+  flex-shrink: 0;
+}
+
+.level {
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.level.is-on {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.sides {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+/* A figure, not a diagram. Three columns and a stack of rows is enough for the
+   shape to read as a body while every region stays a real, labelled button. */
+.figure {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: minmax(44px, auto);
+  gap: 5px;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto 20px;
+}
+
+.region {
+  min-height: 44px;
+  padding: 6px 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-1);
+  color: var(--ink-quiet);
+  font-size: 10.5px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.region.is-none {
+  opacity: 0.4;
+}
+
+.region.is-low {
+  border-color: #3a3324;
+  background: rgb(220 174 88 / 0.08);
+  color: var(--ink-mid);
+}
+
+.region.is-mid {
+  border-color: #5c4f2a;
+  background: rgb(220 174 88 / 0.18);
+  color: var(--ink);
+}
+
+.region.is-high {
+  border-color: var(--accent);
+  background: rgb(220 174 88 / 0.34);
+  color: var(--ink);
+}
+
+.region.is-max {
+  border-color: var(--accent);
+  background: rgb(220 174 88 / 0.62);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.level.is-low {
+  background: rgb(220 174 88 / 0.08);
+}
+.level.is-mid {
+  background: rgb(220 174 88 / 0.18);
+}
+.level.is-high {
+  background: rgb(220 174 88 / 0.34);
+}
+.level.is-max {
+  background: rgb(220 174 88 / 0.62);
+  color: var(--on-accent);
+}
+
+/* The read-only version: three maps side by side, so squares rather than
+   labels. The words are in the lists underneath. */
+.maps {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.mapcard {
+  flex: 1;
+  min-width: 0;
+}
+
+.figure--small {
+  gap: 2px;
+  grid-auto-rows: 10px;
+  max-width: none;
+  margin-bottom: 10px;
+}
+
+.region--flat {
+  min-height: 12px;
+  padding: 0;
+  border-radius: 3px;
+  font-size: 0;
+  pointer-events: none;
+}
+
+/* ---------- stakes ---------- */
+
+/* Sits directly above the floor bar, collapsed to one line. A stake picker as
+   a screen before every game would tax the ninety per cent of rounds that do
+   not want one; a strip you can ignore costs nothing. */
+.stakes {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-bottom) + 68px);
+  z-index: 29;
+  border-top: 1px solid var(--line-soft);
+  background: var(--panel-deep);
+}
+
+.stakes__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-quiet);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.stakes__label {
+  color: var(--ink-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stakes__value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.stakes__score {
+  flex: 1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stakes__chev {
+  color: var(--ink-dim);
+  margin-left: auto;
+}
+
+.stakes__score + .stakes__chev {
+  margin-left: 0;
+}
+
+.stakes__body {
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stakes__opts {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.stakes__opts::-webkit-scrollbar {
+  display: none;
+}
+
+.stakes__blurb {
+  margin: 0;
+  color: var(--ink-quiet);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.stakes__fine {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+/* The strip eats into the play area, so give it back. */
+.play {
+  padding-bottom: calc(var(--safe-bottom) + 150px);
+}

@@ -38,6 +38,14 @@ export const ENGINE_COLOR: Record<EngineId, string> = {
   builder: '#6fc0dd',
   vault: '#d4b06a',
   endurance: '#e26b6b',
+  leader: '#c98ae0',
+  quiz: '#8fd08a',
+  authored: '#d9a06a',
+  relay: '#7fb8d4',
+  staged: '#9aa8e0',
+  story: '#dba7c4',
+  bodymap: '#e0956f',
+  ordered: '#a9b6c9',
 };
 
 export interface Band {

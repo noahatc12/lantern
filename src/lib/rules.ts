@@ -12,6 +12,13 @@ import type { EngineId } from '../types';
  * prompt, which comes from the sealed bundle, supplies the SUBJECT. Every
  * engine whose rules depend on a subject says so explicitly, so a player is
  * never left guessing what a blank field wants.
+ *
+ * A deck may override any of it. Several games share an engine while being
+ * different games: Utter Silence and First to Break both run on endurance, and
+ * the endurance rules below describe First to Break specifically, so without an
+ * override one of the two would open on instructions for the other. The
+ * override lives in the deck, which means it ships encrypted like every other
+ * piece of content and reveals nothing here.
  */
 
 export interface Rules {
@@ -20,6 +27,18 @@ export interface Rules {
   /** A worked example. Concrete beats abstract, especially for authored games. */
   example?: { label: string; lines: string[] };
   notes: string[];
+}
+
+/** What a deck may override. Anything omitted falls back to its engine. */
+export type RulesOverride = Partial<Rules>;
+
+/**
+ * The rules a given deck should show: its engine's, with anything the deck
+ * states for itself taking precedence.
+ */
+export function rulesFor(deck: { engine: EngineId; rules?: RulesOverride }): Rules {
+  const base = RULES[deck.engine];
+  return deck.rules ? { ...base, ...deck.rules } : base;
 }
 
 export const RULES: Record<EngineId, Rules> = {
@@ -254,6 +273,190 @@ export const RULES: Record<EngineId, Rules> = {
       'This inverts the usual incentive. Normally escalating is the goal; here holding back is, and the tension does the work.',
       'Losing is not a punishment. It is how the game ends and it is the better half of the deal.',
       'If nobody breaks inside the cap it is a draw, which is a real outcome and not a failure.',
+    ],
+  },
+
+  leader: {
+    summary: 'One of you holds the role for the whole round, not just a turn.',
+    steps: [
+      'The app names who is leading and hands them a command to read out.',
+      'The other one either does it or does not, by the deck’s rule.',
+      'Tap Done, next if they obeyed. Tap the other one if they slipped.',
+      'The role changes hands when the round ends or the misses run out.',
+    ],
+    example: {
+      label: 'Why the role is fixed',
+      lines: [
+        'Every other game here swaps every turn, which is fair.',
+        'A role that changes hands every thirty seconds is not a role.',
+        'This one stays put long enough to be one.',
+      ],
+    },
+    notes: [
+      'The app is doing the asking, which is the entire point. Reading a line off a screen is far easier than saying it, and it is still your voice saying it.',
+      'Misses are not scored past the round. Nothing about who missed what is written down.',
+      'Whoever is leading can drop a command without reading it. Nobody has to explain a pass.',
+    ],
+  },
+
+  quiz: {
+    summary: 'One of you answers as the other, then finds out how close you were.',
+    steps: [
+      'A question comes up about one of you.',
+      'The other answers it as they think that person would, and locks it in.',
+      'Then the real answer goes in, and both are shown side by side.',
+      'The end screen lists only the ones you got wrong.',
+    ],
+    example: {
+      label: 'What you are playing for',
+      lines: [
+        'A hit tells you something you already knew.',
+        'A miss is a thing neither of you knew you disagreed about.',
+        'The misses are the output. The score is just there to make it a game.',
+      ],
+    },
+    notes: [
+      'Close enough counts. Whoever the question was about decides, and it is not a spelling test.',
+      'Nothing is written down: not the answers, not the score, not who missed what. It exists on screen and then it is gone.',
+      'A high score is the boring outcome. If you get everything right, the questions were too easy.',
+    ],
+  },
+
+  authored: {
+    summary: 'You write the content. The app only holds it, and takes the name off.',
+    steps: [
+      'Take the phone somewhere else and write yours, privately.',
+      'Hand it over. They write theirs without seeing yours.',
+      'Both sets get mixed together into one pile.',
+      'What comes out has no name on it unless somebody taps to see it.',
+    ],
+    example: {
+      label: 'Why nobody signs them',
+      lines: [
+        'You can put something in without being the one who asked for it.',
+        'If it lands badly, nobody has to own it.',
+        'That is the same protection the sorting games give, applied to your own words.',
+      ],
+    },
+    notes: [
+      'Two people and a short list is not real anonymity. Phrasing gives you away. Treat it as deniability rather than secrecy and it still does its job.',
+      'Be specific. A vague one never gets drawn and done; a specific one does.',
+      'Delete removes it from the phone immediately. This is your writing, so it is the one place that has to be true.',
+    ],
+  },
+
+  relay: {
+    summary: 'One sentence each, passing the phone, until there is a whole story.',
+    steps: [
+      'The app gives you an opening line.',
+      'Add one sentence, then hand the phone over.',
+      'You can only see the last two sentences, so nobody edits backwards.',
+      'At the end you read the whole thing and decide whether to keep it.',
+    ],
+    example: {
+      label: 'Why one sentence',
+      lines: [
+        'One sentence is nothing to write, so neither of you stalls.',
+        'And neither of you gets to decide alone what the story is.',
+        'What comes out is usually better than either would have written.',
+      ],
+    },
+    notes: [
+      'There is a character cap and it is doing real work. One person writing paragraphs turns this into an audience.',
+      'Until you tap Keep it exists only on the screen. Nothing is written down as you go.',
+      'Delete means gone from the phone, not hidden.',
+    ],
+  },
+
+  staged: {
+    summary: 'Stages unlocked in order, one per sitting, over weeks.',
+    steps: [
+      'One stage per sitting. The next does not open until you have both marked this one done.',
+      'The app runs the clock and calls the swap.',
+      'The one receiving says nothing except to redirect.',
+      'Two questions afterwards, out loud, then mark it done.',
+    ],
+    example: {
+      label: 'Why the gate is real',
+      lines: [
+        'Rushing the stages removes the entire mechanism.',
+        'So there is no way to skip ahead, and that is deliberate.',
+        'Your progress is saved, so this can run over weeks.',
+      ],
+    },
+    notes: [
+      'Everything else here is trying to escalate something. This one takes the goal away on purpose, and that contrast is why it belongs.',
+      'Treating an early stage as a route to something else is the specific thing this rules out.',
+      'Only your progress is saved. Nothing you say is.',
+    ],
+  },
+
+  story: {
+    summary: 'A direction, an opening line you did not fully choose, and then you talk.',
+    steps: [
+      'The app gives a direction and names who is telling this one.',
+      'You each privately pick one opening line out of a hand.',
+      'The teller sees both, not knowing which is whose, and picks one.',
+      'They tell that story. The other one listens and asks a single question at the end.',
+    ],
+    example: {
+      label: 'Why the line is forced',
+      lines: [
+        'Left to yourself you spend the first minute deciding which story this is.',
+        'Handed a first sentence, you are already telling one.',
+        'And because they put a line in too, what you tell was partly their choice.',
+      ],
+    },
+    notes: [
+      'No time limit and no interruptions. The single question at the end is a rule rather than a suggestion.',
+      'Pick the line you would most want to hear them tell, not the one easiest for you.',
+      'Nothing from this is written down anywhere.',
+    ],
+  },
+
+  bodymap: {
+    summary: 'You each mark where you want to be touched. Then both maps are shown together.',
+    steps: [
+      'Pick a level, then tap everywhere on the figure it applies to.',
+      'Hand the phone over. The other one does the same without seeing yours.',
+      'Both maps come back side by side, plus a combined one.',
+      'Where the maps disagree is the part worth talking about.',
+    ],
+    example: {
+      label: 'Why a picture',
+      lines: [
+        'A list of body parts is forgettable.',
+        'A map is glanceable and you will actually look at it again.',
+        'It is the only thing here whose output is spatial.',
+      ],
+    },
+    notes: [
+      'This one saves BOTH maps, which nothing else in the app does. Seeing them beside each other is the whole game, so you are both making yours knowing it gets shown.',
+      'Anywhere either of you marks as not here is excluded from the games that use the map.',
+      'You can delete both maps from the end screen, and that removes them from the phone.',
+    ],
+  },
+
+  ordered: {
+    summary: 'A fixed sequence, in sets, that you can put down and pick up again.',
+    steps: [
+      'A question comes up. Both of you answer it out loud, one after the other.',
+      'Tap through when you have both answered.',
+      'There is a break between sets, and you can stop there.',
+      'Your place is remembered, so picking it up another day starts where you left it.',
+    ],
+    example: {
+      label: 'Why the order is locked',
+      lines: [
+        'The late questions work because the early ones came first.',
+        'Each set asks for more than the one before it.',
+        'Shuffling would turn a ramp into a pile, so nothing here shuffles.',
+      ],
+    },
+    notes: [
+      'Answer at length. One-word answers are the only way to waste this.',
+      'Stopping partway is normal and the app is built for it. Several sittings is a normal way to do this.',
+      'Only your place is saved. Nothing either of you says is written down.',
     ],
   },
 };

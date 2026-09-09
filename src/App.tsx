@@ -3,6 +3,8 @@ import { installSafeAreaVars } from './lib/safeArea';
 import { forget, hasContent, tryCached } from './lib/content';
 import type { Bundle } from './lib/content';
 import { propsUsed } from './lib/deck';
+import { record } from './lib/history';
+import { StartedContext } from './lib/started';
 import { TIER_LABEL } from './lib/engineMeta';
 import {
   isBool,
@@ -27,6 +29,8 @@ import Vault from './screens/Vault';
 import Settings from './screens/Settings';
 import TabBar from './components/TabBar';
 import FloorBar from './components/FloorBar';
+import Stakes from './components/Stakes';
+import type { StakeKind } from './components/Stakes';
 import type { Tab } from './components/TabBar';
 import DrawGame from './games/DrawGame';
 import MatchGame from './games/MatchGame';
@@ -38,6 +42,14 @@ import ScaleGame from './games/ScaleGame';
 import BuilderGame from './games/BuilderGame';
 import VaultGame from './games/VaultGame';
 import EnduranceGame from './games/EnduranceGame';
+import LeaderGame from './games/LeaderGame';
+import QuizGame from './games/QuizGame';
+import AuthoredGame from './games/AuthoredGame';
+import RelayGame from './games/RelayGame';
+import StagedGame from './games/StagedGame';
+import StoryGame from './games/StoryGame';
+import BodyMapGame from './games/BodyMapGame';
+import OrderedGame from './games/OrderedGame';
 
 type Names = [string, string];
 
@@ -129,6 +141,27 @@ function AppBody() {
    */
   const [stopped, setStopped] = useState(false);
 
+  /**
+   * The stakes modifier, per game rather than per session. Restricted to the
+   * engines that have a win condition: bolting a forfeit onto a sorting game or
+   * a repair conversation is the one way this feature does damage.
+   */
+  const [stake, setStake] = useState<StakeKind>('none');
+
+  /**
+   * When the current deck was opened, so leaving it can record how long it was
+   * actually played. A ref rather than state: nothing renders from it, and it
+   * must not cause the game underneath to re-render mid-round.
+   */
+  const openedAt = useRef(0);
+
+  /**
+   * Set by the Rules screen when a game is actually started. Without it the app
+   * would have to guess from how long the screen was open, which mislabels both
+   * a short game and a phone left lying on a rules screen.
+   */
+  const startedDeck = useRef<string | null>(null);
+
   useEffect(() => {
     installSafeAreaVars();
     void (async () => {
@@ -208,12 +241,15 @@ function AppBody() {
 
   function openDeck(deck: Deck) {
     setStopped(false);
+    setStake('none');
     if (deck.engine === 'vault') {
       setTab('vault');
       setRoute({ at: 'tabs' });
       return;
     }
     listScroll.current = window.scrollY;
+    openedAt.current = Date.now();
+    startedDeck.current = null;
     const mark: Resume = { deckId: deck.id, at: Date.now() };
     setResume(mark);
     write('resume', mark);
@@ -221,6 +257,11 @@ function AppBody() {
   }
 
   function leaveGame() {
+    if (route.at === 'game' && startedDeck.current === route.deck.id) {
+      record(route.deck.id, openedAt.current, Date.now() - openedAt.current);
+    }
+    startedDeck.current = null;
+    openedAt.current = 0;
     restoring.current = true;
     setStopped(false);
     setRoute({ at: 'tabs' });
@@ -233,6 +274,10 @@ function AppBody() {
    */
   function easeOff() {
     setMaxTier((t) => (t > 1 ? ((t - 1) as Tier) : t));
+  }
+
+  function noteStart(deckId: string) {
+    startedDeck.current = deckId;
   }
 
   function pickTab(next: Tab) {
@@ -291,6 +336,10 @@ function AppBody() {
     }
 
     const common = { deck, names, maxTier, availableProps, onExit: leaveGame };
+    // Only where there is something to win. Never on compare or match: a
+    // forfeit attached to Conflict Lab or a yes/no/maybe sort turns a
+    // conversation into a game with a loser.
+    const canStake = ['draw', 'leader', 'quiz', 'timer', 'endurance'].includes(deck.engine);
     const floor = (
       <FloorBar
         label={`ceiling ${maxTier}, ${TIER_LABEL[maxTier]}`}
@@ -319,6 +368,22 @@ function AppBody() {
         return <VaultGame deck={deck} names={names} decks={decks} onExit={leaveGame} />;
       case 'endurance':
         return <EnduranceGame {...common} />;
+      case 'leader':
+        return <LeaderGame {...common} />;
+      case 'quiz':
+        return <QuizGame {...common} />;
+      case 'authored':
+        return <AuthoredGame {...common} />;
+      case 'relay':
+        return <RelayGame {...common} />;
+      case 'staged':
+        return <StagedGame {...common} />;
+      case 'story':
+        return <StoryGame {...common} />;
+      case 'bodymap':
+        return <BodyMapGame {...common} />;
+      case 'ordered':
+        return <OrderedGame {...common} />;
       default:
         return <DrawGame {...common} />;
     }
@@ -327,10 +392,11 @@ function AppBody() {
     // The vault is a place rather than a round, so a stop control there would
     // be stopping nothing.
     return (
-      <>
+      <StartedContext.Provider value={noteStart}>
         {body}
+        {canStake && <Stakes names={names} kind={stake} onKind={setStake} />}
         {deck.engine !== 'vault' && floor}
-      </>
+      </StartedContext.Provider>
     );
   }
 
@@ -367,7 +433,7 @@ function AppBody() {
         <Shelf decks={decks} maxTier={maxTier} onPick={openDeck} onTier={setMaxTier} />
       )}
 
-      {tab === 'vault' && <Vault decks={decks} names={names} />}
+      {tab === 'vault' && <Vault decks={decks} names={names} onPick={openDeck} />}
 
       {tab === 'settings' && (
         <Settings

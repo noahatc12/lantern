@@ -8,6 +8,8 @@
  * needs this screen, so it is one component rather than five near-copies.
  */
 
+import { useScreenTop } from '../lib/useScreenTop';
+
 interface Props {
   title?: string;
   body?: string;
@@ -15,6 +17,11 @@ interface Props {
 }
 
 export default function Empty({ title, body, onExit }: Props) {
+  // Arriving here is navigation even though the App-level route has not moved:
+  // ease off drops the ceiling and the game you are standing in empties out.
+  // Without this you land on it at whatever scroll the last screen had.
+  useScreenTop('empty');
+
   return (
     <main className="stopped" data-screen="empty">
       <h1 className="stopped__title">{title ?? 'Nothing here at this ceiling.'}</h1>

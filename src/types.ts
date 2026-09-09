@@ -11,7 +11,15 @@ export type EngineId =
   | 'ladder'
   | 'builder'
   | 'vault'
-  | 'endurance';
+  | 'endurance'
+  | 'leader'
+  | 'quiz'
+  | 'authored'
+  | 'relay'
+  | 'staged'
+  | 'story'
+  | 'bodymap'
+  | 'ordered';
 
 export type Player = 'a' | 'b';
 
@@ -27,11 +35,24 @@ export interface Card {
   slots?: Record<string, string[]>;
 }
 
+export interface DeckRules {
+  summary?: string;
+  steps?: string[];
+  example?: { label: string; lines: string[] };
+  notes?: string[];
+}
+
 export interface Deck {
   id: string;
   title: string;
   blurb: string;
   engine: EngineId;
+  /**
+   * Per-deck how-to-play, overriding the engine's. Several games share an
+   * engine while being different games, and the engine's own rules can only
+   * describe one of them.
+   */
+  rules?: DeckRules;
   tierRange: [Tier, Tier];
   tags: string[];
   duration: 'short' | 'medium' | 'long';

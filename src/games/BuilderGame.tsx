@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Deck, Tier } from '../types';
 import { playable } from '../lib/deck';
+import { excludedParts, ruledOut } from '../lib/bodyMap';
+import { REGIONS } from './BodyMapGame';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 
@@ -26,6 +28,12 @@ interface SlotDef {
   key: string;
   label: string;
   options: SlotOption[];
+  /**
+   * Filter this slot against the body map, if one has been made. Anywhere
+   * either of you marked as not here stops being dealt, which is what makes a
+   * generic deck of body parts into one that fits the two of you.
+   */
+  fromBodyMap?: boolean;
 }
 
 interface Props {
@@ -35,14 +43,32 @@ interface Props {
   onExit: () => void;
 }
 
-function pick(options: SlotOption[], maxTier: Tier, have: string[]): string {
-  const usable = playable(options, maxTier, have);
+function pickFrom(usable: SlotOption[]): string {
   if (usable.length === 0) return '';
   return usable[Math.floor(Math.random() * usable.length)]!.text;
 }
 
 export default function BuilderGame({ deck, maxTier, availableProps, onExit }: Props) {
   const defs = deck.slotDefs ?? [];
+
+  // Read once per render of the game rather than per roll: the map does not
+  // change while you are playing, and re-reading storage on every reroll would
+  // be work for nothing.
+  const excluded = useMemo(() => excludedParts(), []);
+  const regionLabels = useMemo(
+    () => new Map(REGIONS.map((r) => [r.id, r.label])),
+    [],
+  );
+
+  /** A slot's options, after the ceiling, the props, and the map. */
+  const usableOptions = (d: SlotDef): SlotOption[] => {
+    const base = playable(d.options, maxTier, availableProps);
+    if (!d.fromBodyMap || excluded.size === 0) return base;
+    const kept = base.filter((o) => !ruledOut(o.text, excluded, regionLabels));
+    // Never empty a slot completely. A map that rules out everything in a pool
+    // should narrow the game, not break it.
+    return kept.length > 0 ? kept : base;
+  };
   const [started, setStarted] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
 
@@ -50,11 +76,11 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
 
   function rollAll() {
     const next: Record<string, string> = {};
-    for (const d of defs) next[d.key] = pick(d.options, maxTier, availableProps);
+    for (const d of defs) next[d.key] = pickFrom(usableOptions(d));
     setValues(next);
   }
 
-  const usable = defs.filter((d) => playable(d.options, maxTier, availableProps).length > 0);
+  const usable = defs.filter((d) => usableOptions(d).length > 0);
 
   if (!started) {
     return (
@@ -69,7 +95,7 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
       >
         <p className="play__note">
           {usable.length} parts,{' '}
-          {usable.reduce((n, d) => n + playable(d.options, maxTier, availableProps).length, 0)}{' '}
+          {usable.reduce((n, d) => n + usableOptions(d).length, 0)}{' '}
           options at this ceiling.
         </p>
       </Rules>
@@ -110,7 +136,7 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
               <button
                 className="rolled__reroll"
                 onClick={() =>
-                  setValues({ ...values, [d.key]: pick(d.options, maxTier, availableProps) })
+                  setValues({ ...values, [d.key]: pickFrom(usableOptions(d)) })
                 }
                 aria-label={`Reroll ${d.label}`}
               >

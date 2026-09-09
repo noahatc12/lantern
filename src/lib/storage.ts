@@ -168,3 +168,87 @@ export function clearAll(keep: string[] = []): void {
   const spare = new Set(keep);
   for (const k of keys()) if (!spare.has(k)) remove(k);
 }
+
+/* ---------------------------------------------------------------------------
+   Shapes belonging to the games that keep something between sessions.
+   --------------------------------------------------------------------------- */
+
+/** A line one of you wrote, for the jar and the sealed envelopes. */
+export interface AuthoredItem {
+  id: string;
+  by: 0 | 1;
+  text: string;
+  at: number;
+  /** Sealed until this moment. Absent means available now. */
+  unlockAt?: number;
+  doneAt?: number;
+}
+
+export const isAuthored: Guard<AuthoredItem[]> = (v): v is AuthoredItem[] =>
+  Array.isArray(v) &&
+  v.every((it) => {
+    if (!it || typeof it !== 'object') return false;
+    const o = it as Record<string, unknown>;
+    return (
+      isStr(o.id) &&
+      (o.by === 0 || o.by === 1) &&
+      isStr(o.text) &&
+      typeof o.at === 'number'
+    );
+  });
+
+/** A story the two of you wrote a sentence at a time and chose to keep. */
+export interface Story {
+  id: string;
+  at: number;
+  lines: string[];
+}
+
+export const isStories: Guard<Story[]> = (v): v is Story[] =>
+  Array.isArray(v) &&
+  v.every((it) => {
+    if (!it || typeof it !== 'object') return false;
+    const o = it as Record<string, unknown>;
+    return isStr(o.id) && typeof o.at === 'number' && isStringArray(o.lines);
+  });
+
+/** Which stages of a staged protocol are finished. */
+export const isStages: Guard<number[]> = (v): v is number[] =>
+  Array.isArray(v) && v.every((n) => typeof n === 'number' && Number.isInteger(n));
+
+/**
+ * Both body maps. The only place in the app that keeps both sides of a private
+ * exercise, because showing them beside each other IS the game and both people
+ * make theirs knowing that.
+ */
+export interface BodyMaps {
+  at: number;
+  a: Record<string, number>;
+  b: Record<string, number>;
+}
+
+const isRatings = (v: unknown): v is Record<string, number> =>
+  Boolean(v) &&
+  typeof v === 'object' &&
+  !Array.isArray(v) &&
+  Object.values(v as Record<string, unknown>).every((n) => typeof n === 'number');
+
+export const isBodyMaps: Guard<BodyMaps | null> = (v): v is BodyMaps | null => {
+  if (v === null) return true;
+  if (!v || typeof v !== 'object') return false;
+  const o = v as Record<string, unknown>;
+  return typeof o.at === 'number' && isRatings(o.a) && isRatings(o.b);
+};
+
+/** Where an ordered, resumable deck was left. */
+export interface Progress {
+  i: number;
+  at: number;
+}
+
+export const isProgress: Guard<Progress | null> = (v): v is Progress | null => {
+  if (v === null) return true;
+  if (!v || typeof v !== 'object') return false;
+  const o = v as Record<string, unknown>;
+  return typeof o.i === 'number' && typeof o.at === 'number';
+};

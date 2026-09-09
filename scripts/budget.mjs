@@ -2,15 +2,25 @@
 /**
  * Bundle size budget.
  *
- * 195KB is fine. The point is that it should not stop being fine quietly. A
- * dependency added for one convenience is how a phone app becomes slow to open
- * in a room with bad wifi, and nobody notices the day it happens.
+ * The number is not the point. The point is that it should not stop being fine
+ * quietly: a dependency added for one convenience is how a phone app becomes
+ * slow to open in a room with bad wifi, and nobody notices the day it happens.
+ *
+ * Raised 260 to 330 kB on 2026-09-08, deliberately, for six new engines and
+ * thirteen new games. That is roughly 3 kB of shipped code per game, which is
+ * the right shape: the growth is content and screens rather than dependencies,
+ * and the dependency list is still React and nothing else. If this ever needs
+ * raising again for a reason that is NOT "we added games", that is the signal
+ * something was pulled in that should not have been.
+ *
+ * The real constraint is one cold load on a phone, once, after which it is
+ * cached. That is what makes this number generous rather than lax.
  */
 
 import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-const BUDGETS = { js: 260 * 1024, css: 40 * 1024 };
+const BUDGETS = { js: 330 * 1024, css: 60 * 1024 };
 
 const dir = path.resolve('dist', 'assets');
 let js = 0;
