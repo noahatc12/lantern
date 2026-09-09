@@ -814,14 +814,14 @@ async function main() {
   await page.locator('.handoff__go').click();
 
   await page.waitForSelector('.marks', { timeout: 10000 });
-  const rowCount = await page.locator('.mark').count();
+  const rowCount = await page.locator('.markrow').count();
   check('all ten come back at once to be marked', rowCount === 10, `${rowCount} rows`);
   const doneDisabled = await page.locator('.play__stage .btn--big').isDisabled();
   check('cannot finish before every one is marked', doneDisabled);
   await snap(page, 'newlywed-scoreboard');
 
   for (let i = 0; i < rowCount; i++) {
-    await page.locator('.mark').nth(i).locator('.filter').nth(i % 2).click();
+    await page.locator('.markrow').nth(i).locator('.filter').nth(i % 2).click();
   }
   await page.waitForTimeout(120);
   const nowEnabled = !(await page.locator('.play__stage .btn--big').isDisabled());
