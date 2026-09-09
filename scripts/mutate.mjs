@@ -12,6 +12,11 @@
  * gate goes red. A mutation that survives means the gate is decoration, and
  * that is reported as a failure of the SUITE rather than of the code.
  *
+ * Every mutation here is gated on the UNIT suite, deliberately. A browser-gated
+ * mutation would take two minutes each and this would stop being something you
+ * run before every push. Anything that can only be caught in a browser belongs
+ * in the audit, which is run by the same gate a few steps later.
+ *
  * Restores every file afterwards, including on crash.
  *
  *   npm run mutate
@@ -78,6 +83,41 @@ const MUTATIONS = [
     file: 'src/lib/crypto.ts',
     find: "  const salt = fromB64(payload.salt);",
     replace: '  const salt = new Uint8Array(16);',
+    gate: 'npm run --silent test',
+  },
+  {
+    name: 'the shared filter stops honouring the ceiling',
+    file: 'src/lib/deck.ts',
+    find: '    (it) => it.tier <= maxTier && (it.props ?? []).every((p) => hand.has(p)),',
+    replace: '    (it) => (it.props ?? []).every((p) => hand.has(p)),',
+    gate: 'npm run --silent test',
+  },
+  {
+    name: 'the shared filter stops honouring the props',
+    file: 'src/lib/deck.ts',
+    find: '    (it) => it.tier <= maxTier && (it.props ?? []).every((p) => hand.has(p)),',
+    replace: '    (it) => it.tier <= maxTier,',
+    gate: 'npm run --silent test',
+  },
+  {
+    name: 'erase-everything stops sparing what it was told to spare',
+    file: 'src/lib/storage.ts',
+    find: '  for (const k of keys()) if (!spare.has(k)) remove(k);',
+    replace: '  for (const k of keys()) remove(k);',
+    gate: 'npm run --silent test',
+  },
+  {
+    name: 'the play history reports the first play instead of the last',
+    file: 'src/lib/history.ts',
+    find: '    row.last = Math.max(row.last, p.at);',
+    replace: '    row.last = row.last || p.at;',
+    gate: 'npm run --silent test',
+  },
+  {
+    name: 'when-labels go back to elapsed hours instead of calendar days',
+    file: 'src/lib/history.ts',
+    find: '  const days = Math.floor((startOfDay(now) - startOfDay(at)) / 86400000);',
+    replace: '  const days = Math.floor((now - at) / 86400000);',
     gate: 'npm run --silent test',
   },
   {

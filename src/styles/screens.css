@@ -1419,15 +1419,19 @@
 /* ---------- body map ---------- */
 
 /* One scrolling row rather than a wrap. Five chips wrapped four-and-one, which
-   made the fifth read as a separate thing rather than the top of the scale. */
+   made the fifth read as a separate thing rather than the top of the scale.
+   No edge bleed here: this row sits on a play screen, whose padding is 16px
+   rather than the 20px the shelf uses, and a negative margin copied from there
+   pushed the document 4px wide. The scroll works perfectly well inside the
+   padding, so the bleed was decoration that could only ever be a bug. */
 .levels {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
   gap: 7px;
-  margin: 0 -20px 14px;
-  padding: 0 20px 2px;
+  margin: 0 0 14px;
+  padding: 0 0 2px;
 }
 
 .levels::-webkit-scrollbar {
