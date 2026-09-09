@@ -367,17 +367,17 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
           </p>
           <ul className="marks">
             {rounds.map((r, i) => (
-              <li className="mark" key={r.card.id}>
-                <p className="mark__q">{r.card.text}</p>
-                <p className="mark__pair">
-                  <span className="mark__label">you</span>
+              <li className="markrow" key={r.card.id}>
+                <p className="markrow__q">{r.card.text}</p>
+                <p className="markrow__pair">
+                  <span className="markrow__label">you</span>
                   {r.real}
                 </p>
-                <p className="mark__pair">
-                  <span className="mark__label">{names[guesser]}</span>
+                <p className="markrow__pair">
+                  <span className="markrow__label">{names[guesser]}</span>
                   {r.guess}
                 </p>
-                <div className="mark__btns">
+                <div className="markrow__btns">
                   <button
                     className={`filter ${r.hit === false ? 'is-on' : ''}`}
                     onClick={() => setRound(i, { hit: false })}

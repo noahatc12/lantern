@@ -1212,6 +1212,9 @@
 
 /* ---------- quiz ---------- */
 
+/* Named markrow rather than mark. The short version collided with the app's
+   logo component and silently gave it a panel background and a border, which
+   only showed up when someone looked at the screen. */
 .marks {
   list-style: none;
   margin: 0 0 22px;
@@ -1221,28 +1224,28 @@
   gap: 14px;
 }
 
-.mark {
+.markrow {
   padding: 16px 16px 14px;
   border: 1px solid var(--line-soft);
   border-radius: 16px;
   background: var(--panel-1);
 }
 
-.mark__q {
+.markrow__q {
   margin: 0 0 10px;
   font-family: var(--serif);
   font-size: 17px;
   line-height: 1.35;
 }
 
-.mark__pair {
+.markrow__pair {
   margin: 0 0 4px;
   color: var(--ink-mid);
   font-size: 14px;
   line-height: 1.45;
 }
 
-.mark__label {
+.markrow__label {
   display: inline-block;
   min-width: 62px;
   color: var(--ink-dim);
@@ -1251,13 +1254,13 @@
   text-transform: uppercase;
 }
 
-.mark__btns {
+.markrow__btns {
   display: flex;
   gap: 8px;
   margin-top: 12px;
 }
 
-.mark__btns .filter {
+.markrow__btns .filter {
   flex: 1;
   justify-content: center;
   text-align: center;
@@ -1651,4 +1654,21 @@
 /* The strip eats into the play area, so give it back. */
 .play {
   padding-bottom: calc(var(--safe-bottom) + 150px);
+}
+
+/* ---------- the mark ---------- */
+
+/* The lantern, lit. The glow is the same idea as the wick bar: warm light on a
+   dark ground is the one visual argument this app makes, and the logo should
+   make it too rather than being a shape sitting next to a word. */
+.mark--lit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  filter: drop-shadow(0 0 10px rgb(220 174 88 / 0.32));
+}
+
+.gate .mark--lit {
+  margin-bottom: 14px;
 }

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { Deck, Tier } from '../types';
 import { ENGINE_COLOR, TIER_LABEL } from '../lib/engineMeta';
+import Mark from '../components/Mark';
 
 /**
  * The landing screen, ported from the canvas.
@@ -69,7 +70,9 @@ export default function Tonight({
   return (
     <main className="screen" data-screen="tonight">
       <header className="tonight__head">
-        <span className="dot" aria-hidden="true" />
+        <span className="mark--lit">
+          <Mark size={19} />
+        </span>
         <span className="tonight__name">Lantern</span>
         <span className="tonight__clock">{clockLabel()}</span>
       </header>

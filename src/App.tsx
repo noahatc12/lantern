@@ -30,6 +30,7 @@ import Settings from './screens/Settings';
 import TabBar from './components/TabBar';
 import FloorBar from './components/FloorBar';
 import Stakes from './components/Stakes';
+import Mark from './components/Mark';
 import type { StakeKind } from './components/Stakes';
 import type { Tab } from './components/TabBar';
 import DrawGame from './games/DrawGame';
@@ -288,7 +289,9 @@ function AppBody() {
   if (route.at === 'boot') {
     return (
       <main className="gate">
-        <span className="dot" aria-hidden="true" />
+        <span className="mark--lit">
+          <Mark size={34} />
+        </span>
         <p className="gate__hint">opening</p>
       </main>
     );

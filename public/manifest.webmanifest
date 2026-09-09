@@ -1,7 +1,7 @@
 {
   "name": "Lantern",
   "short_name": "Lantern",
-  "description": "",
+  "description": "Forty two games for two people, on one phone.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -13,6 +13,18 @@
       "src": "./icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

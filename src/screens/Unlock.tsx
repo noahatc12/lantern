@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { unlock } from '../lib/content';
 import type { Bundle } from '../lib/content';
+import Mark from '../components/Mark';
 
 interface Props {
   onUnlocked: (bundle: Bundle) => void;
@@ -41,7 +42,9 @@ export default function Unlock({ onUnlocked, missing }: Props) {
 
   return (
     <main className="gate">
-      <span className="dot" aria-hidden="true" />
+      <span className="mark--lit">
+        <Mark size={54} />
+      </span>
       <h1 className="gate__title">Lantern</h1>
       <form className="gate__form" onSubmit={submit}>
         <label className="gate__label" htmlFor="pp">

@@ -1,6 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Lantern">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="56%" r="42%">
+      <stop offset="0%" stop-color="#dcae58" stop-opacity="0.42"/>
+      <stop offset="60%" stop-color="#dcae58" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#dcae58" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flame" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#f2d08a"/>
+      <stop offset="100%" stop-color="#dcae58"/>
+    </linearGradient>
+  </defs>
+
   <rect width="512" height="512" rx="112" fill="#0f0e13"/>
-  <circle cx="256" cy="262" r="104" fill="none" stroke="#e8b64c" stroke-width="18"/>
-  <path d="M256 158v-46" stroke="#e8b64c" stroke-width="18" stroke-linecap="round"/>
-  <circle cx="256" cy="262" r="42" fill="#e8b64c" opacity="0.9"/>
+  <circle cx="256" cy="288" r="170" fill="url(#glow)"/>
+
+  <g fill="none" stroke="#dcae58" stroke-width="17" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M222 128a34 34 0 0 1 68 0"/>
+    <path d="M196 156h120"/>
+    <path d="M212 156c-22 52-26 108-10 156M300 156c22 52 26 108 10 156"/>
+    <path d="M188 320h136"/>
+    <path d="M206 320v34h100v-34"/>
+  </g>
+
+  <path
+    d="M256 206c30 30 42 56 42 78a42 42 0 0 1-84 0c0-22 12-48 42-78z"
+    fill="url(#flame)"/>
 </svg>
