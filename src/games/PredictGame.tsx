@@ -27,19 +27,31 @@ interface Props {
   onExit: () => void;
 }
 
+/**
+ * The round's three lines live outside the phase on purpose.
+ *
+ * They used to be carried inside it, which was tidy right up until the phase
+ * became the thing that drives a screen cross-fade: every keystroke in a slot
+ * was then a navigation, so typing a sentence flashed the whole screen once per
+ * letter and raced the transition it had just started. What is on screen and
+ * what has been typed into it are two different pieces of state and only one of
+ * them is a screen.
+ */
 type Phase =
   | { step: 'rules' }
   | { step: 'prompt' }
-  | { step: 'write'; slots: string[]; real: number | null }
-  | { step: 'handoff'; slots: string[]; real: number }
-  | { step: 'guess'; slots: string[]; real: number }
-  | { step: 'reveal'; slots: string[]; real: number; picked: number };
+  | { step: 'write' }
+  | { step: 'handoff' }
+  | { step: 'guess' }
+  | { step: 'reveal'; picked: number };
 
 export default function PredictGame({ deck, names, maxTier, availableProps, onExit }: Props) {
   const slotCount = deck.slotCount ?? 3;
   const pool = playable(deck.cards, maxTier, availableProps);
 
   const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
+  const [slots, setSlots] = useState<string[]>(() => Array(slotCount).fill(''));
+  const [real, setReal] = useState<number | null>(null);
   const [writer, setWriter] = useState<0 | 1>(0);
   const [used, setUsed] = useState<string[]>([]);
   const [prompt, setPrompt] = useState(() => pool[Math.floor(Math.random() * pool.length)]);
@@ -102,7 +114,11 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
           <button
             className="btn btn--primary btn--big"
             onClick={() =>
-              setPhase({ step: 'write', slots: Array(slotCount).fill(''), real: null })
+              {
+                setSlots(Array(slotCount).fill(''));
+                setReal(null);
+                setPhase({ step: 'write' });
+              }
             }
           >
             {names[writer]} is ready
@@ -113,7 +129,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
   }
 
   if (phase.step === 'write') {
-    const filled = phase.slots.every((s) => s.trim().length > 0);
+    const filled = slots.every((s) => s.trim().length > 0);
     return (
       <main className="play">
         <header className="play__top">
@@ -128,7 +144,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
           <p className="play__note">
             Two lines true but unremarkable. One line the real answer. Mark the real one.
           </p>
-          {phase.slots.map((s, i) => (
+          {slots.map((s, i) => (
             <label key={i} className="slot">
               <span className="slot__n">{i + 1}</span>
               <input
@@ -136,18 +152,18 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
                 value={s}
                 placeholder={i === slotCount - 1 ? 'and another' : 'something about you'}
                 onChange={(e) => {
-                  const slots = [...phase.slots];
-                  slots[i] = e.target.value;
-                  setPhase({ ...phase, slots });
+                  const next = [...slots];
+                  next[i] = e.target.value;
+                  setSlots(next);
                 }}
               />
               <button
                 type="button"
-                className={`slot__mark ${phase.real === i ? 'is-on' : ''}`}
-                onClick={() => setPhase({ ...phase, real: i })}
+                className={`slot__mark ${real === i ? 'is-on' : ''}`}
+                onClick={() => setReal(i)}
                 aria-label={`Mark line ${i + 1} as the real one`}
               >
-                {phase.real === i ? 'real' : 'mark'}
+                {real === i ? 'real' : 'mark'}
               </button>
             </label>
           ))}
@@ -156,12 +172,12 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
           </p>
           <button
             className="btn btn--primary"
-            disabled={!filled || phase.real === null}
+            disabled={!filled || real === null}
             onClick={() =>
-              setPhase({ step: 'handoff', slots: phase.slots, real: phase.real as number })
+              setPhase({ step: 'handoff' })
             }
           >
-            {filled && phase.real !== null ? 'Done' : 'Fill all three and mark one'}
+            {filled && real !== null ? 'Done' : 'Fill all three and mark one'}
           </button>
         </section>
       </main>
@@ -172,7 +188,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
     return (
       <Handoff
         to={names[writer === 0 ? 1 : 0]}
-        onContinue={() => setPhase({ step: 'guess', slots: phase.slots, real: phase.real })}
+        onContinue={() => setPhase({ step: 'guess' })}
       />
     );
   }
@@ -188,11 +204,11 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
         </header>
         <section className="play__stage">
           <div className="guesses">
-            {phase.slots.map((s, i) => (
+            {slots.map((s, i) => (
               <button
                 key={i}
                 className="guess"
-                onClick={() => setPhase({ ...phase, step: 'reveal', picked: i })}
+                onClick={() => setPhase({ step: 'reveal', picked: i })}
               >
                 {s}
               </button>
@@ -203,7 +219,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
     );
   }
 
-  const right = phase.picked === phase.real;
+  const right = phase.step === 'reveal' && phase.picked === real;
   return (
     <main className="play">
       <header className="play__top">
@@ -212,7 +228,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
       </header>
       <section className="play__stage">
         <p className="play__kind">the real one</p>
-        <p className="card">{phase.slots[phase.real]}</p>
+        <p className="card">{real === null ? '' : slots[real]}</p>
         <p className="play__note">
           Ask one follow-up question about it. The question is the point, not the score.
         </p>
