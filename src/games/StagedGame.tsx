@@ -210,7 +210,7 @@ export default function StagedGame({ deck, names, onExit }: Props) {
         </header>
         <section className="play__stage">
           <p className="play__eyebrow">{names[phase.side]} is receiving</p>
-          <p className="clock">
+          <p className={`clock ${left > 0 ? 'is-running' : ''}`}>
             {mm}:{ss}
           </p>
           <p className="card card--quiet">{stage.cue}</p>

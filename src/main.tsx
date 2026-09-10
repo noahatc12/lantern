@@ -4,6 +4,7 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/app.css';
 import './styles/screens.css';
+import './styles/motion.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root missing');

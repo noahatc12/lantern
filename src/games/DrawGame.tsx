@@ -164,7 +164,9 @@ export default function DrawGame({ deck, names, maxTier, availableProps, onExit 
       ) : (
         <section className="play__stage">
           {kind && <p className="play__kind">{kind}</p>}
-          <p className="card">{card.text}</p>
+          <p className="card" key={card.id}>
+            {card.text}
+          </p>
           <div className="play__actions">
             <button className="btn btn--ghost" onClick={() => pull(kind)}>
               <Icon name="reroll" size={17} />

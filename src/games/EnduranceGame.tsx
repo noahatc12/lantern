@@ -120,10 +120,12 @@ export default function EnduranceGame({ deck, names, maxTier, availableProps, on
 
       <section className="play__stage">
         <p className="play__eyebrow">{names[phase.active]} is doing the work</p>
-        <p className="clock">
+        <p className="clock is-running">
           {mm}:{ss}
         </p>
-        <p className="card">{phase.constraint}</p>
+        <p className="card" key={phase.constraint}>
+          {phase.constraint}
+        </p>
 
         <div className="play__actions">
           <button

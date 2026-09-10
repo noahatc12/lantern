@@ -166,7 +166,9 @@ export default function MatchGame({ deck, names, maxTier, availableProps, onExit
           <div className="bar__fill" style={{ width: `${pct}%` }} />
         </div>
         <section className="play__stage">
-          <p className="card">{card.text}</p>
+          <p className="card" key={card.id}>
+            {card.text}
+          </p>
           <div className="sort">
             <button className="btn sort__no" onClick={() => choose(phase, 'no')}>
               No

@@ -816,10 +816,17 @@ input {
 
 /* ---------- stop controls ---------- */
 
+/* Kills every animation and transition in the app, including the motion layer
+   imported after this file. The !important is doing real work here: without it
+   a later stylesheet would quietly reintroduce motion for someone who asked the
+   operating system not to have any. */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     transition: none !important;
     animation: none !important;
+    scroll-behavior: auto !important;
   }
 }
 

@@ -18,8 +18,10 @@ const all = [];
 
 async function scan(page, name) {
   // Let entrance animations finish. Scanning mid-fade reports the CONTENT as a
-  // contrast failure, which is an artifact of measuring a half-drawn frame.
-  await page.waitForTimeout(600);
+  // contrast failure, which is an artifact of measuring a half-drawn frame. A
+  // staggered list is the slowest thing to arrive, so this allows for the
+  // entrance plus every stagger step.
+  await page.waitForTimeout(800);
   const res = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();

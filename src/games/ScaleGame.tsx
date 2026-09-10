@@ -91,7 +91,9 @@ export default function ScaleGame({ deck, names, maxTier, availableProps, onExit
           </span>
         </header>
         <section className="play__stage">
-          <p className="card">{card.text}</p>
+          <p className="card" key={card.id}>
+            {card.text}
+          </p>
           <p className="play__note">0 is not for me. 10 is yes, tonight.</p>
           <div className="scale">
             {VALUES.map((v) => (

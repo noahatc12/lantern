@@ -356,6 +356,55 @@ async function main() {
     await ctx.close();
   }
 
+  // ---- 8. Someone who asked the OS for less motion --------------------------
+  // The one way this feature can actually harm somebody. An accommodation that
+  // is never tested is an accommodation that quietly stops working the first
+  // time a stylesheet is added after the one that implements it.
+  console.log('\nscenario: the phone is set to reduce motion');
+  {
+    const ctx = await browser.newContext({
+      ...devices['iPhone 13'],
+      viewport: { width: 390, height: 844 },
+      reducedMotion: 'reduce',
+    });
+    await ctx.addInitScript((key) => {
+      window.localStorage.setItem('lantern.contentKey', key);
+      window.localStorage.setItem('lantern.names', JSON.stringify(['Noah', 'Lily']));
+      window.localStorage.setItem('lantern.onboarded', 'true');
+      window.localStorage.setItem('lantern.defaultTier', '5');
+    }, key);
+
+    const page = await ctx.newPage();
+    await page.goto(BASE, { waitUntil: 'networkidle' });
+    await shelf(page);
+
+    const moving = await page.evaluate(() => {
+      const out = [];
+      for (const el of document.querySelectorAll('main, .decks li, .deckcard, .search__input')) {
+        const cs = getComputedStyle(el);
+        if (cs.animationName !== 'none') out.push(`${el.className}:${cs.animationName}`);
+        if (cs.transitionDuration !== '0s') out.push(`${el.className}:t${cs.transitionDuration}`);
+      }
+      return out;
+    });
+    check(
+      'motion',
+      'reduce-motion means no animation anywhere',
+      moving.length === 0,
+      moving.slice(0, 3).join(', '),
+    );
+
+    // And the app is still usable, rather than stuck at the opacity an
+    // entrance animation would have started from.
+    const visible = await page.evaluate(() => {
+      const el = document.querySelector('.decks li');
+      return el ? getComputedStyle(el).opacity : '0';
+    });
+    check('motion', 'nothing is left invisible by a cancelled entrance', visible === '1', visible);
+
+    await ctx.close();
+  }
+
   await browser.close();
 
   const failed = results.filter((r) => !r.ok);

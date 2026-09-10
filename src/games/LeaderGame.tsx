@@ -153,7 +153,9 @@ export default function LeaderGame({ deck, names, maxTier, availableProps, onExi
 
       <section className="play__stage">
         <p className="play__eyebrow">{names[leader]} is giving the orders</p>
-        <p className="card">{card.text}</p>
+        <p className="card" key={card.id}>
+          {card.text}
+        </p>
 
         {/* The delivery instruction is the deck's, not the engine's. It is the
             part that differs between games riding this mechanic, and it is also

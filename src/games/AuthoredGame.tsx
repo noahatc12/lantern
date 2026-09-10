@@ -236,7 +236,9 @@ export default function AuthoredGame({ deck, names, onExit }: Props) {
           <p className="play__eyebrow">
             {isRevealed ? `${names[item.by]} wrote this` : 'one of you wrote this'}
           </p>
-          <p className="card">{item.text}</p>
+          <p className="card" key={item.id}>
+            {item.text}
+          </p>
 
           <div className="play__actions">
             <button

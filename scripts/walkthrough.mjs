@@ -45,8 +45,10 @@ function check(name, ok, detail = '') {
 async function snap(page, name) {
   n += 1;
   // Let entrance animations settle. Screenshotting mid-transition produced a
-  // washed-out frame that I nearly mistook for a contrast problem.
-  await page.waitForTimeout(500);
+  // washed-out frame that I nearly mistook for a contrast problem. The longest
+  // thing on a screen is a 320ms entrance plus seven 22ms stagger steps, so
+  // 700 clears it with room rather than by a hair.
+  await page.waitForTimeout(700);
 
   const m = await page.evaluate(() => {
     const el = document.documentElement;
@@ -270,10 +272,17 @@ async function main() {
   await snap(page, 'tod-card');
 
   // Skip: new card, SAME person.
+  const node1 = await page.locator('.card').elementHandle();
   await page.locator('.play__actions .btn--ghost').click();
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(200);
   const card2 = await txt(page, '.card');
   check('skip draws a different card', card1 !== card2);
+
+  // A replaced card has to be a NEW element, or its entrance animation fires
+  // once on mount and every card after the first just blinks into place.
+  const node2 = await page.locator('.card').elementHandle();
+  const sameNode = await page.evaluate(([a, b]) => a === b, [node1, node2]);
+  check('a new card is a new element, so it arrives rather than blinks', !sameNode);
   await page.locator('.play__actions .btn--primary').click();
   await page.waitForSelector('.play__turn');
   const turn2 = await txt(page, '.play__turn');

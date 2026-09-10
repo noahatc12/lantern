@@ -108,7 +108,9 @@ export default function StoryGame({ deck, names, maxTier, availableProps, onExit
         </header>
         <section className="play__stage">
           <p className="play__eyebrow">the direction</p>
-          <p className="card">{prompt.text}</p>
+          <p className="card" key={prompt.id}>
+            {prompt.text}
+          </p>
           <button
             className="btn btn--primary btn--big"
             onClick={() => setPhase({ step: 'pick', who: other, first: null })}

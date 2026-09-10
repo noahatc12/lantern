@@ -178,7 +178,7 @@ export default function OrderedGame({ deck, names, maxTier, availableProps, onEx
         </header>
         <section className="play__stage">
           <p className="play__eyebrow">no talking</p>
-          <p className="clock">
+          <p className={`clock ${left > 0 ? 'is-running' : ''}`}>
             {mm}:{ss}
           </p>
           <p className="card card--quiet">
@@ -235,7 +235,9 @@ export default function OrderedGame({ deck, names, maxTier, availableProps, onEx
       </header>
       <section className="play__stage">
         <p className="play__eyebrow">both of you answer, out loud</p>
-        <p className="card">{card.text}</p>
+        <p className="card" key={card.id}>
+          {card.text}
+        </p>
         <button className="btn btn--primary btn--big" onClick={next}>
           Next question
         </button>

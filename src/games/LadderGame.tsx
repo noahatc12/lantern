@@ -136,7 +136,9 @@ export default function LadderGame({ deck, names, maxTier, availableProps, onExi
         ) : (
           <>
             <p className="play__eyebrow">{names[asker]} asks</p>
-            <p className="card">{card.text}</p>
+            <p className="card" key={card.id}>
+              {card.text}
+            </p>
             {deck.rule && <p className="play__note">{deck.rule}</p>}
             <div className="play__actions">
               <button className="btn btn--ghost" onClick={() => setEnded(true)}>

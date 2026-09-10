@@ -1,0 +1,332 @@
+/* ===========================================================================
+   Motion.
+   ===========================================================================
+
+   One file on purpose. Motion added a rule at a time turns into forty
+   unrelated timings that each looked fine alone, and the result reads as
+   restless rather than considered. Everything here shares four durations and
+   two curves, and the whole layer can be deleted in one go if it ever stops
+   earning its place.
+
+   Three rules it follows:
+
+   1. Motion explains where something came from. A row that rises into place
+      says "this list is being built"; a row that fades in place says nothing.
+      Decoration that says nothing is what makes an app feel busy.
+
+   2. Only transform and opacity. Both are composited, so none of this can make
+      a draw stutter on a phone that is already three years old.
+
+   3. Nothing waits on an animation. Every control is tappable on its first
+      frame, so the app never feels slower than it is, which is the usual price
+      of this kind of work.
+
+   Staggers stop after eight items. A forty five card list staggered all the way
+   down takes over a second to finish arriving, and by item twenty the effect
+   has stopped being information and started being a delay.
+
+   The reduced-motion query in app.css kills every animation and transition in
+   the app, this file included. That is the whole accommodation and it is not
+   negotiable: some people get motion sick, and a couples app is not the place
+   to make someone feel unwell.
+   ========================================================================= */
+
+:root {
+  /* Settles rather than eases. The difference is only visible on entrances,
+     which is where all of the character is. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --stagger: 22ms;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+/* ---------------------------------------------------------------- lists ---
+   Anything that arrives as a set arrives as a set. */
+
+.decks li,
+.yeses .yes,
+.ious .iou,
+.rows--gap li,
+.rules__steps .step,
+.stages .stage,
+.lines li,
+.marks .markrow,
+.untried li,
+.stack > *,
+.result__list li,
+.compare__side,
+.mapcard,
+.stat,
+.fact {
+  animation: riseIn var(--t-mid) var(--ease-out) both;
+}
+
+/* Eight, then stop. Past that the delay is longer than the information. */
+.decks li:nth-child(1),
+.yeses .yes:nth-child(1),
+.ious .iou:nth-child(1),
+.rows--gap li:nth-child(1),
+.rules__steps .step:nth-child(1),
+.stages .stage:nth-child(1),
+.lines li:nth-child(1),
+.marks .markrow:nth-child(1),
+.stack > *:nth-child(1),
+.result__list li:nth-child(1),
+.compare__side:nth-child(1),
+.mapcard:nth-child(1),
+.stat:nth-child(1),
+.fact:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.decks li:nth-child(2),
+.yeses .yes:nth-child(2),
+.ious .iou:nth-child(2),
+.rows--gap li:nth-child(2),
+.rules__steps .step:nth-child(2),
+.stages .stage:nth-child(2),
+.lines li:nth-child(2),
+.marks .markrow:nth-child(2),
+.stack > *:nth-child(2),
+.result__list li:nth-child(2),
+.compare__side:nth-child(2),
+.mapcard:nth-child(2),
+.stat:nth-child(2),
+.fact:nth-child(2) {
+  animation-delay: calc(var(--stagger) * 1);
+}
+
+.decks li:nth-child(3),
+.yeses .yes:nth-child(3),
+.ious .iou:nth-child(3),
+.rows--gap li:nth-child(3),
+.rules__steps .step:nth-child(3),
+.stages .stage:nth-child(3),
+.lines li:nth-child(3),
+.marks .markrow:nth-child(3),
+.stack > *:nth-child(3),
+.result__list li:nth-child(3),
+.mapcard:nth-child(3),
+.stat:nth-child(3),
+.fact:nth-child(3) {
+  animation-delay: calc(var(--stagger) * 2);
+}
+
+.decks li:nth-child(4),
+.yeses .yes:nth-child(4),
+.ious .iou:nth-child(4),
+.rows--gap li:nth-child(4),
+.rules__steps .step:nth-child(4),
+.stages .stage:nth-child(4),
+.lines li:nth-child(4),
+.marks .markrow:nth-child(4),
+.stack > *:nth-child(4),
+.result__list li:nth-child(4),
+.fact:nth-child(4) {
+  animation-delay: calc(var(--stagger) * 3);
+}
+
+.decks li:nth-child(5),
+.yeses .yes:nth-child(5),
+.ious .iou:nth-child(5),
+.rows--gap li:nth-child(5),
+.lines li:nth-child(5),
+.marks .markrow:nth-child(5),
+.result__list li:nth-child(5) {
+  animation-delay: calc(var(--stagger) * 4);
+}
+
+.decks li:nth-child(6),
+.yeses .yes:nth-child(6),
+.rows--gap li:nth-child(6),
+.marks .markrow:nth-child(6),
+.result__list li:nth-child(6) {
+  animation-delay: calc(var(--stagger) * 5);
+}
+
+.decks li:nth-child(7),
+.yeses .yes:nth-child(7),
+.rows--gap li:nth-child(7),
+.marks .markrow:nth-child(7),
+.result__list li:nth-child(7) {
+  animation-delay: calc(var(--stagger) * 6);
+}
+
+.decks li:nth-child(n + 8),
+.yeses .yes:nth-child(n + 8),
+.rows--gap li:nth-child(n + 8),
+.marks .markrow:nth-child(n + 8),
+.result__list li:nth-child(n + 8) {
+  animation-delay: calc(var(--stagger) * 7);
+}
+
+/* ------------------------------------------------------------- moments ---
+   The screens where something is revealed, which are the ones people are
+   actually waiting for. */
+
+.gapnum,
+.scores,
+.stat__n,
+.clock {
+  animation: popIn var(--t-slow) var(--ease-out) both;
+}
+
+/* A clock that sits perfectly still reads as stopped. Shallow on purpose: deep
+   enough to notice out of the corner of an eye, never deep enough to make the
+   numbers hard to read or to catch a screenshot mid-fade. */
+.clock.is-running {
+  animation: popIn var(--t-slow) var(--ease-out) both,
+    breathe 2.4s ease-in-out 0.4s infinite;
+}
+
+.suggest,
+.resume {
+  animation: riseIn var(--t-slow) var(--ease-out) both;
+}
+
+.suggest {
+  animation-delay: 60ms;
+}
+
+/* --------------------------------------------------------------- press ---
+   Everything tappable answers within a frame or two. Half of these had no
+   pressed state at all, which is what makes a control feel dead even when it
+   works. */
+
+.deckcard,
+.suggest,
+.resume,
+.tier,
+.filter,
+.level,
+.region,
+.lineopt,
+.row2,
+.seg__btn,
+.prop,
+.tabbtn,
+.iou__delete,
+.rolled__reroll,
+.btn--redeem,
+.btn--pill,
+.scale__btn,
+.guess,
+.slot__mark,
+.optin__btn,
+.handoff__go,
+.card--danger,
+.sort__yes,
+.sort__no,
+.sort__maybe {
+  transition: transform var(--t-fast) var(--ease),
+    background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
+}
+
+.deckcard:active,
+.suggest:active,
+.resume:active,
+.row2:active,
+.lineopt:active,
+.prop:active,
+.card--danger:active {
+  transform: scale(0.985);
+}
+
+.tier:active,
+.filter:active,
+.level:active,
+.region:active,
+.seg__btn:active,
+.iou__delete:active,
+.rolled__reroll:active,
+.btn--redeem:active,
+.btn--pill:active,
+.scale__btn:active,
+.guess:active,
+.slot__mark:active,
+.optin__btn:active,
+.handoff__go:active,
+.sort__yes:active,
+.sort__no:active,
+.sort__maybe:active {
+  transform: scale(0.94);
+}
+
+.tabbtn:active .tabbtn__body {
+  transform: scale(0.9);
+}
+
+.tabbtn__body {
+  transition: transform var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+/* The lit rule under the active tab. Snapping between tabs made the bar feel
+   like four separate buttons rather than one control. */
+.tabbtn__rule {
+  transition: background-color var(--t-mid) var(--ease), transform var(--t-mid) var(--ease-out);
+}
+
+.tabbtn.is-on .tabbtn__rule {
+  transform: scaleX(1.35);
+}
+
+/* --------------------------------------------------------------- panels ---
+   Things that open in place. */
+
+.stakes__body,
+.rules__notes {
+  animation: riseIn var(--t-mid) var(--ease-out) both;
+}
+
+/* The wick already transitions its width. Give the tier labels the same
+   timing so the whole control moves as one thing. */
+.tier__label,
+.tier__n {
+  transition: color var(--t-mid) var(--ease), opacity var(--t-mid) var(--ease);
+}
+
+/* --------------------------------------------------------------- gates ---
+   The unlock screen is the first thing anyone sees, and the lantern lighting
+   is worth two hundred milliseconds. */
+.gate .mark--lit {
+  animation: popIn var(--t-slow) var(--ease-out) both;
+}
+
+.gate__title {
+  animation: riseIn var(--t-slow) var(--ease-out) 80ms both;
+}
+
+.gate__form {
+  animation: riseIn var(--t-slow) var(--ease-out) 140ms both;
+}

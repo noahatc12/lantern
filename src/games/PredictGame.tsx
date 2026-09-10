@@ -92,7 +92,9 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
         </header>
         <section className="play__stage">
           <p className="play__eyebrow">{names[writer]} writes</p>
-          <p className="card">{prompt.text}</p>
+          <p className="card" key={prompt.id}>
+            {prompt.text}
+          </p>
           <p className="play__note">
             Make the real one something you actually mean, or the round does nothing.
           </p>

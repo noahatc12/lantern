@@ -105,7 +105,9 @@ export default function TimerGame({ deck, onExit }: Props) {
 
         {running && current && (
           <>
-            <p className="card">{current.text}</p>
+            <p className="card" key={current.text}>
+              {current.text}
+            </p>
             {upcoming && (
               <p className="play__note">
                 next change in {(upcoming.at ?? 0) - elapsed}s
