@@ -55,6 +55,28 @@ async function waitForServer(url, tries = 60) {
   return false;
 }
 
+/**
+ * Kill the preview server, and mean it.
+ *
+ * `spawn` with a shell starts a shell that starts npx that starts node, and
+ * `child.kill()` on Windows kills only the shell. The node process keeps the
+ * port, the next verify refuses to start because something is already serving
+ * it, and a full gate run is burned finding that out. Killing the tree is the
+ * only thing that actually works here.
+ */
+function stopServer(child) {
+  if (!child.pid) return;
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  } else {
+    try {
+      process.kill(-child.pid, 'SIGTERM');
+    } catch {
+      child.kill();
+    }
+  }
+}
+
 async function main() {
   // ---- headless half -------------------------------------------------------
   step('typecheck', 'npm run --silent typecheck');
@@ -103,7 +125,17 @@ Something is already serving ${BASE}.`);
   const server = spawn(`npx vite preview --port ${PORT}`, {
     shell: true,
     stdio: 'ignore',
+    detached: process.platform !== 'win32',
   });
+
+  // The finally below only runs on a normal exit. Interrupting a run left the
+  // server holding the port, which is the state that then blocks the next one.
+  const bail = () => {
+    stopServer(server);
+    process.exit(130);
+  };
+  process.on('SIGINT', bail);
+  process.on('SIGTERM', bail);
 
   try {
     if (!(await waitForServer(BASE))) {
@@ -132,7 +164,7 @@ Something is already serving ${BASE}.`);
       });
     }
   } finally {
-    server.kill();
+    stopServer(server);
     try {
       unlinkSync('dist/content.enc');
     } catch {
