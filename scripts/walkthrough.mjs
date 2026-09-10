@@ -44,6 +44,11 @@ function check(name, ok, detail = '') {
 
 async function snap(page, name) {
   n += 1;
+  await page
+    .waitForFunction(() => !document.documentElement.dataset.transitioning, null, {
+      timeout: 5000,
+    })
+    .catch(() => {});
   // Let entrance animations settle. Screenshotting mid-transition produced a
   // washed-out frame that I nearly mistook for a contrast problem. The longest
   // thing on a screen is a 320ms entrance plus seven 22ms stagger steps, so
@@ -193,16 +198,34 @@ async function main() {
     await page.locator('.deckcard__title', { hasText: title }).click();
     await page.waitForSelector('.rules', { timeout: 10000 });
   };
+  /**
+   * Wait for a screen cross-fade to finish.
+   *
+   * Mid-transition the DOM is being swapped, so a check that finds a control
+   * and then clicks it can find it gone in between. The app flags the document
+   * while a transition is in flight precisely so this does not have to be a
+   * guessed duration.
+   */
+  const settled = async () => {
+    await page
+      .waitForFunction(() => !document.documentElement.dataset.transitioning, null, {
+        timeout: 5000,
+      })
+      .catch(() => {});
+  };
+
   const home = async () => {
     // Two shapes of back control: the play header's, and the screen-style
     // chevron the newer engines use. Leaving a game has to work from either.
+    await settled();
     const b = page.locator('.play__back');
-    if (await b.count()) await b.first().click();
+    if (await b.count()) await b.first().click().catch(() => {});
     else {
       const c = page.locator('.backbtn');
-      if (await c.count()) await c.first().click();
+      if (await c.count()) await c.first().click().catch(() => {});
     }
     await page.waitForSelector('.decks, .tabbar', { timeout: 10000 });
+    await settled();
     if ((await page.locator('.decks').count()) === 0) await goShelf();
   };
 

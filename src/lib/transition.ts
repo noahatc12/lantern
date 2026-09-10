@@ -47,6 +47,20 @@ export function withTransition(fn: () => void): void {
     fn();
     return;
   }
+  // Mark the document while a transition is in flight.
+  //
+  // Mid-transition the DOM is being swapped, so anything that looks at the page
+  // between the snapshot and the settle can see an element, decide to click it,
+  // and find it gone. That is a race for the audit harness and it would be one
+  // for any script driving the app. A flag turns an implicit timing dependency
+  // into something that can actually be waited on, rather than something every
+  // caller has to guess a duration for.
+  const root = document.documentElement;
+  root.dataset.transitioning = '1';
+  const settle = () => {
+    delete root.dataset.transitioning;
+  };
+
   const transition = (document as Doc).startViewTransition!(() => {
     flushSync(fn);
   });
@@ -59,9 +73,14 @@ export function withTransition(fn: () => void): void {
   const hush = (pending?: Promise<void>) => {
     if (pending) void pending.catch(() => {});
   };
-  hush(transition.finished);
   hush(transition.ready);
   hush(transition.updateCallbackDone);
+
+  if (transition.finished) {
+    transition.finished.then(settle, settle);
+  } else {
+    settle();
+  }
 }
 
 /**
