@@ -4,6 +4,7 @@ import { rulesFor } from '../lib/rules';
 import { ENGINE_COLOR, TIER_LABEL } from '../lib/engineMeta';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * Read every card in the app without playing anything.
@@ -88,7 +89,7 @@ function contentsOf(deck: FullDeck): Hit[] {
 }
 
 export default function Inspect({ decks, onBack }: Props) {
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useNavState<string | null>(null);
   const [query, setQuery] = useState('');
 
   useScreenTop(`${openId ?? 'list'}`);

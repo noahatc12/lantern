@@ -121,6 +121,22 @@ const MUTATIONS = [
     gate: 'npm run --silent test',
   },
   {
+    name: 'the content audit stops noticing a card in the wrong engine',
+    file: 'decks/bucket-list.json',
+    find: '"text": "See the northern lights"',
+    replace: '"text": "What do you want to see most?"',
+    gate: 'npm run --silent audit:content',
+    skipIfMissing: true,
+  },
+  {
+    name: 'the content audit stops noticing a duplicated line',
+    file: 'decks/deep-talk.json',
+    find: '"text": "What did you think of me the first week you knew me?"',
+    replace: '"text": "What was the first thing you noticed about me?"',
+    gate: 'npm run --silent audit:content',
+    skipIfMissing: true,
+  },
+  {
     name: 'the content lint rules go inert',
     file: 'lint-rules.local.json',
     find: '\\\\b',

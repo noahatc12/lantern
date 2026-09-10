@@ -5,6 +5,7 @@ import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E12 Leader. One person holds the role for a whole round.
@@ -44,7 +45,7 @@ export default function LeaderGame({ deck, names, maxTier, availableProps, onExi
     [deck, maxTier, availableProps],
   );
 
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [leader, setLeader] = useState<0 | 1>(0);
   const [i, setI] = useState(0);
   const [given, setGiven] = useState(0);

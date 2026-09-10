@@ -4,6 +4,7 @@ import { playable } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E11 Endurance. Two people, one loses by reacting.
@@ -34,7 +35,7 @@ export default function EnduranceGame({ deck, names, maxTier, availableProps, on
   const capSeconds = deck.capSeconds ?? 1200;
   const constraints = playable(deck.cards, maxTier, availableProps);
 
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [turnLeft, setTurnLeft] = useState(turnSeconds);
   const [total, setTotal] = useState(0);
   const origin = useRef(0);

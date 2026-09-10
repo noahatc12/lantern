@@ -5,6 +5,7 @@ import type { Bundle } from './lib/content';
 import { propsUsed } from './lib/deck';
 import { record } from './lib/history';
 import { StartedContext } from './lib/started';
+import { useNavState } from './lib/transition';
 import { useEdgeBack } from './lib/useEdgeBack';
 import {
   isBool,
@@ -110,8 +111,8 @@ function AppBody() {
     throw new Error('deliberate crash from the test hook');
   }
 
-  const [route, setRoute] = useState<Route>({ at: 'boot' });
-  const [tab, setTab] = useState<Tab>('tonight');
+  const [route, setRoute] = useNavState<Route>({ at: 'boot' });
+  const [tab, setTab] = useNavState<Tab>('tonight');
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [names, setNames] = useState<Names>(() => read<Names>('names', ['', ''], isNames));
 

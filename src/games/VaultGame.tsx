@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import type { Deck } from '../types';
 import Rules from '../components/Rules';
 import { isVaultItems, read } from '../lib/storage';
 import type { VaultItem } from '../lib/storage';
 import { useScreenTop } from '../lib/useScreenTop';
+import { useNavState } from '../lib/transition';
 import VaultScreen from '../screens/Vault';
 
 /**
@@ -31,7 +31,7 @@ interface Props {
 const KEY = 'vault.items';
 
 export default function VaultGame({ deck, names, decks, onExit }: Props) {
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useNavState(false);
   const items = read<VaultItem[]>(KEY, [], isVaultItems);
 
   useScreenTop(String(started));

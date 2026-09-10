@@ -6,6 +6,7 @@ import Rules from '../components/Rules';
 import Empty from '../components/Empty';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E13 Quiz. One of you answers as the other, then finds out.
@@ -73,7 +74,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
   const size = mode === 'preseed' ? Math.min(batch, pool.length) : pool.length;
 
   const [rounds, setRounds] = useState<Round[]>([]);
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [draft, setDraft] = useState('');
   /** Whose life the questions are about right now. */
   const [subject, setSubject] = useState<0 | 1>(0);

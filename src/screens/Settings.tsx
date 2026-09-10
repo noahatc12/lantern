@@ -5,6 +5,7 @@ import { useScreenTop } from '../lib/useScreenTop';
 import type { Deck } from '../types';
 import Inspect from './Inspect';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * Settings and its four sub-screens, ported from the canvas.
@@ -37,7 +38,7 @@ interface Props {
 }
 
 export default function Settings(p: Props) {
-  const [sub, setSub] = useState<Sub>('root');
+  const [sub, setSub] = useNavState<Sub>('root');
   const [a, setA] = useState(p.names[0]);
   const [b, setB] = useState(p.names[1]);
 

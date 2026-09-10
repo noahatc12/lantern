@@ -82,6 +82,7 @@ async function main() {
   step('typecheck', 'npm run --silent typecheck');
   step('unit tests', 'npm run --silent test');
   step('content lint', 'npm run --silent lint:decks');
+  step('content audit', 'npm run --silent audit:content');
   step('mutation suite', 'npm run --silent mutate');
   step('build', 'npm run --silent build');
   step('bundle budget', 'node scripts/budget.mjs');

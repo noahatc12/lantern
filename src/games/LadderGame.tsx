@@ -4,6 +4,7 @@ import { playable } from '../lib/deck';
 import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import { useNavState } from '../lib/transition';
 import Icon from '../components/Icon';
 
 /**
@@ -31,10 +32,10 @@ export default function LadderGame({ deck, names, maxTier, availableProps, onExi
     .map((c) => c as typeof c & { rung?: number })
     .sort((a, b) => (a.rung ?? 0) - (b.rung ?? 0));
 
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useNavState(false);
   const [i, setI] = useState(0);
   const [optedIn, setOptedIn] = useState<[boolean, boolean]>([false, false]);
-  const [ended, setEnded] = useState(false);
+  const [ended, setEnded] = useNavState(false);
   const [asker, setAsker] = useState<0 | 1>(0);
 
   useScreenTop(`${started}-${i}-${optedIn[0]}${optedIn[1]}-${ended}`);

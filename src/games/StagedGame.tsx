@@ -4,6 +4,7 @@ import { isStages, read, write } from '../lib/storage';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E16 Staged. Stages unlocked in order, one per sitting, over weeks.
@@ -50,7 +51,7 @@ export default function StagedGame({ deck, names, onExit }: Props) {
   const key = `stages.${deck.id}`;
 
   const [done, setDone] = useState<number[]>(() => read<number[]>(key, [], isStages));
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [left, setLeft] = useState(0);
   const [marked, setMarked] = useState<[boolean, boolean]>([false, false]);
 

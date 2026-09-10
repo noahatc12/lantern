@@ -132,6 +132,31 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Nothing is selectable, and nothing flashes grey when tapped.
+   
+   This is a thing two people pass back and forth, so a long press on a card
+   should do nothing at all. Left alone, iOS answers one with blue selection
+   handles and a Copy / Look Up / Share menu over the top of whatever you were
+   reading, and a tap on any control flashes a grey box behind it. Both make a
+   deliberate screen feel like a web page.
+   
+   The exception is where selecting text is the point: you cannot correct what
+   you typed in a field you cannot select. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 /* A faint warm wash from the top. Flat #000 reads as a terminal; a gradient
    reads as a room with a light in it. */
 body::before {

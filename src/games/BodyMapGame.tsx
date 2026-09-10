@@ -6,6 +6,7 @@ import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E18 Body map. The only game here whose output is a picture.
@@ -124,7 +125,7 @@ export default function BodyMapGame({ deck, names, onExit }: Props) {
   const [saved, setSaved] = useState<BodyMaps | null>(() =>
     read<BodyMaps | null>(key, null, isBodyMaps),
   );
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [level, setLevel] = useState(5);
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [mine, setMine] = useState<Painted>({});

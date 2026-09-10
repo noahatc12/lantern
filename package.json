@@ -22,7 +22,8 @@
     "a11y": "node scripts/a11y.mjs",
     "mutate": "node scripts/mutate.mjs",
     "verify": "node scripts/verify.mjs",
-    "budget": "node scripts/budget.mjs"
+    "budget": "node scripts/budget.mjs",
+    "audit:content": "node scripts/audit-content.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

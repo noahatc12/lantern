@@ -7,6 +7,7 @@ import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E15 Relay. One sentence each, passing the phone.
@@ -53,7 +54,7 @@ export default function RelayGame({ deck, names, maxTier, availableProps, onExit
     [deck, maxTier, availableProps],
   );
 
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [lines, setLines] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
   const [turn, setTurn] = useState<0 | 1>(0);

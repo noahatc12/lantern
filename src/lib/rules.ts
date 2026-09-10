@@ -43,17 +43,17 @@ export function rulesFor(deck: { engine: EngineId; rules?: RulesOverride }): Rul
 
 export const RULES: Record<EngineId, Rules> = {
   draw: {
-    summary: 'Take turns. Pick a category, do what the card says, hand the phone over.',
+    summary: 'Take turns. Do what the card says, then hand the phone over.',
     steps: [
       'The screen names whose turn it is.',
-      'That person picks a category, and the app draws one card.',
+      'That person draws a card.',
       'Answer it out loud, or do it.',
       'Tap Done to pass the phone. Tap Skip if you want a different card instead.',
     ],
     example: {
       label: 'A round looks like',
       lines: [
-        'Screen says: Noah. Noah taps truth.',
+        'Screen says: Noah. Noah taps Draw.',
         'Card: "What was the first thing you noticed about me?"',
         'Noah answers, taps Done, hands the phone to Lily.',
       ],

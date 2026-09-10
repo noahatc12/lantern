@@ -13,6 +13,7 @@ import {
 } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import { useNavState } from '../lib/transition';
 import Icon from '../components/Icon';
 
 /**
@@ -35,7 +36,9 @@ interface Props {
 }
 
 export default function DrawGame({ deck, names, maxTier, availableProps, onExit }: Props) {
-  const [started, setStarted] = useState(false);
+  // Rules to play is a real screen change; a draw is not, and already has an
+  // animation of its own on the card itself.
+  const [started, setStarted] = useNavState(false);
   const [state, setState] = useState(() =>
     startSession({
       deckId: deck.id,

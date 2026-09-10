@@ -6,6 +6,7 @@ import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E5 Scale. Both rate the same thing 0 to 10, and the GAP is revealed before
@@ -44,7 +45,7 @@ export default function ScaleGame({ deck, names, maxTier, availableProps, onExit
   );
 
   const [i, setI] = useState(0);
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   useScreenTop(`${phase.step}-${i}`);
 
   const card: Card | undefined = pool[i];

@@ -5,6 +5,7 @@ import type { MatchResult, VaultItem } from '../lib/storage';
 import { byDeck, minutes, readHistory, whenLabel } from '../lib/history';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * The vault: everything the two of you have accumulated, in three parts.
@@ -69,8 +70,8 @@ export default function Vault({ decks, names, onPick, onExit }: Props) {
   const [items, setItems] = useState<VaultItem[]>(() =>
     read<VaultItem[]>(KEY, [], isVaultItems),
   );
-  const [section, setSection] = useState<Section>('owed');
-  const [route, setRoute] = useState<'list' | 'new' | 'result'>('list');
+  const [section, setSection] = useNavState<Section>('owed');
+  const [route, setRoute] = useNavState<'list' | 'new' | 'result'>('list');
   const [open, setOpen] = useState<SavedResult | null>(null);
   const [query, setQuery] = useState('');
 

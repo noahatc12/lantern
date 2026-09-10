@@ -5,6 +5,7 @@ import type { AuthoredItem } from '../lib/storage';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E14 Authored. The content is yours, and the app only holds it.
@@ -64,7 +65,7 @@ export default function AuthoredGame({ deck, names, onExit }: Props) {
   const [items, setItems] = useState<AuthoredItem[]>(() =>
     read<AuthoredItem[]>(key, [], isAuthored),
   );
-  const [route, setRoute] = useState<Route>({ at: 'rules' });
+  const [route, setRoute] = useNavState<Route>({ at: 'rules' });
   const [draft, setDraft] = useState('');
   const [revealed, setRevealed] = useState<string[]>([]);
 

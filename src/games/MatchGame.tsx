@@ -7,6 +7,7 @@ import Rules from '../components/Rules';
 import { isMatchResult, read, write } from '../lib/storage';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E4 Match-reveal. The centrepiece engine.
@@ -59,7 +60,7 @@ export default function MatchGame({ deck, names, maxTier, availableProps, onExit
     [deck, maxTier, availableProps],
   );
 
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [firstAnswers, setFirstAnswers] = useState<Answers | null>(null);
   const saved = read<Saved | null>(`match.${deck.id}`, null, isMatchResult);
 

@@ -6,6 +6,7 @@ import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E2 Predict, authored variant. Two Truths and a Turn-On runs on this.
@@ -38,7 +39,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
   const slotCount = deck.slotCount ?? 3;
   const pool = playable(deck.cards, maxTier, availableProps);
 
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [writer, setWriter] = useState<0 | 1>(0);
   const [used, setUsed] = useState<string[]>([]);
   const [prompt, setPrompt] = useState(() => pool[Math.floor(Math.random() * pool.length)]);

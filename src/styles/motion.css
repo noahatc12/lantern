@@ -330,3 +330,45 @@
 .gate__form {
   animation: riseIn var(--t-slow) var(--ease-out) 140ms both;
 }
+
+/* ------------------------------------------------------ between screens ---
+   The cross-fade the View Transitions API runs when a navigation happens.
+   See lib/transition.ts for why an entrance animation alone was not enough:
+   without an exit, every navigation had a one-frame hole in the middle of it,
+   and that hole is what actually read as abrupt. */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--t-mid);
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--t-mid);
+  animation-timing-function: var(--ease-out);
+}
+
+/* The chrome holds still while the content changes underneath it.
+   
+   Without these the bars are part of the page snapshot and cross-fade with
+   everything else, so the tab bar appears to blink every time you change tab,
+   which is the opposite of what a tab bar is for. Naming them takes them out
+   of the page snapshot and gives each its own, and since they are identical
+   either side of the change they simply do not move. */
+.tabbar {
+  view-transition-name: chrome-tabs;
+}
+
+.floor {
+  view-transition-name: chrome-floor;
+}
+
+.stakes {
+  view-transition-name: chrome-stakes;
+}
+
+/* The card is the one thing that should still arrive under its own steam, so
+   it opts out of being flattened into the page snapshot. */
+.play .card {
+  view-transition-name: none;
+}

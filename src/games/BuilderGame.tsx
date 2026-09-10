@@ -5,6 +5,7 @@ import { excludedParts, ruledOut } from '../lib/bodyMap';
 import { REGIONS } from './BodyMapGame';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import { useNavState } from '../lib/transition';
 import Icon from '../components/Icon';
 
 /**
@@ -70,7 +71,7 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
     // should narrow the game, not break it.
     return kept.length > 0 ? kept : base;
   };
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useNavState(false);
   const [values, setValues] = useState<Record<string, string>>({});
 
   useScreenTop(started);

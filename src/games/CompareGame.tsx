@@ -6,6 +6,7 @@ import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E3 Compare. Both answer the same question privately, then both answers are
@@ -38,7 +39,7 @@ export default function CompareGame({ deck, names, maxTier, availableProps, onEx
   }, [deck, maxTier, availableProps]);
 
   const [i, setI] = useState(0);
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [draft, setDraft] = useState('');
 
   useScreenTop(`${phase.step}-${i}`);

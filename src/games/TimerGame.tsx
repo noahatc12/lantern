@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Deck } from '../types';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import { useNavState } from '../lib/transition';
 import Icon from '../components/Icon';
 
 /**
@@ -20,7 +21,7 @@ interface Props {
 
 export default function TimerGame({ deck, onExit }: Props) {
   const total = deck.totalSeconds ?? 300;
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useNavState(false);
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const origin = useRef(0);

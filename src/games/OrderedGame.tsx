@@ -7,6 +7,7 @@ import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
 import Icon from '../components/Icon';
+import { useNavState } from '../lib/transition';
 
 /**
  * E19 Ordered. A fixed sequence, in acts, that survives being put down.
@@ -50,7 +51,7 @@ export default function OrderedGame({ deck, names, maxTier, availableProps, onEx
 
   const saved = read<Progress | null>(key, null, isProgress);
   const [i, setI] = useState(saved?.i ?? 0);
-  const [phase, setPhase] = useState<Phase>({ step: 'rules' });
+  const [phase, setPhase] = useNavState<Phase>({ step: 'rules' });
   const [left, setLeft] = useState(finaleSeconds);
   const origin = useRef(0);
 
