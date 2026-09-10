@@ -57,27 +57,66 @@ if (!dirty) {
   }
 }
 
+const SITE = 'https://noahatc12.github.io/lantern';
+
+/** The build id currently being served, or null if it cannot be read. */
+function liveBuildId() {
+  const raw = capture('curl', ['-s', `"${SITE}/version.json?cb=${Date.now()}"`]);
+  try {
+    return JSON.parse(raw).id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Taken before the push, because "the deploy landed" means this value changed.
+const idBefore = liveBuildId();
+
 // 4. Push whatever is ahead, including code commits.
 console.log('\n[4/5] pushing...');
 if (run('git', ['push', '-q']).status !== 0) fail('Push failed.');
 
-// 5. Verify the deployed bundle actually matches what was just sealed. A green
-//    deploy says the job ran, not that the right bytes are being served.
+// 5. Wait for the deploy, and check TWO things.
+//
+//    The bundle bytes prove the right content is being served. On their own
+//    they are not enough: content.enc only changes when a deck changes, so a
+//    code-only deploy matched instantly against the PREVIOUS deploy and this
+//    script cheerfully said "live and current" while the new code was still
+//    building. That is the same class of mistake this script was written to
+//    prevent, one level up.
+//
+//    So also wait for the served build id to CHANGE. It is a timestamp written
+//    fresh by every build, so it cannot match by accident and it cannot pass
+//    trivially.
 console.log('\n[5/5] waiting for the deploy...');
-const url = 'https://noahatc12.github.io/lantern/content.enc';
+const url = `${SITE}/content.enc`;
 let live = 0;
-for (let i = 0; i < 60; i++) {
-  const out = capture('curl', ['-s', `"${url}?cb=${Date.now()}"`, '|', 'wc', '-c']);
-  live = Number(out) || 0;
-  if (live === size) break;
+let idNow = idBefore;
+let bytesOk = false;
+let idOk = false;
+
+for (let i = 0; i < 80; i++) {
+  if (!bytesOk) {
+    const out = capture('curl', ['-s', `"${url}?cb=${Date.now()}"`, '|', 'wc', '-c']);
+    live = Number(out) || 0;
+    bytesOk = live === size;
+  }
+  if (!idOk) {
+    idNow = liveBuildId();
+    idOk = Boolean(idNow) && idNow !== idBefore;
+  }
+  if (bytesOk && idOk) break;
   spawnSync('node', ['-e', 'setTimeout(()=>{},3000)'], { timeout: 3200 });
 }
 
-if (live === size) {
+if (bytesOk && idOk) {
   console.log(`\nLive and current. ${(size / 1024).toFixed(1)} kB serving at`);
-  console.log('https://noahatc12.github.io/lantern/');
+  console.log(`${SITE}/`);
+  console.log(`Build ${idNow}`);
   console.log('\nClose the app fully from the switcher before reopening; iOS caches hard.');
 } else {
-  console.log(`\nPushed, but the live bundle is ${live} bytes and we sealed ${size}.`);
-  console.log('The deploy is probably still running. Give it a minute and reload.');
+  console.log('\nPushed, but the deploy has not fully landed yet.');
+  if (!bytesOk) console.log(`  content.enc is ${live} bytes live, we sealed ${size}`);
+  if (!idOk) console.log(`  build id is still ${idNow ?? 'unreadable'}`);
+  console.log('Give it a minute and reload, or check the Actions tab.');
 }
