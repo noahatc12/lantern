@@ -6,6 +6,7 @@ import type { Progress } from '../lib/storage';
 import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E19 Ordered. A fixed sequence, in acts, that survives being put down.
@@ -133,7 +134,7 @@ export default function OrderedGame({ deck, names, maxTier, availableProps, onEx
       <main className="play" data-screen={`ordered.break.${phase.after}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{deck.title}</span>
         </header>
@@ -171,7 +172,7 @@ export default function OrderedGame({ deck, names, maxTier, availableProps, onEx
       <main className="play" data-screen="ordered.finale">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">the last part</span>
         </header>
@@ -223,7 +224,7 @@ export default function OrderedGame({ deck, names, maxTier, availableProps, onEx
     <main className="play" data-screen={`ordered.asking.${i}`}>
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">
           set {actOf(i)} of {acts}

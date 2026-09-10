@@ -4,6 +4,7 @@ import { isAuthored, read, write } from '../lib/storage';
 import type { AuthoredItem } from '../lib/storage';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E14 Authored. The content is yours, and the app only holds it.
@@ -124,7 +125,7 @@ export default function AuthoredGame({ deck, names, onExit }: Props) {
     return (
       <main className="screen" data-screen="authored.who">
         <button className="backbtn" onClick={() => setRoute({ at: 'list' })} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1">Who is writing?</p>
         <p className="lede">
@@ -161,7 +162,7 @@ export default function AuthoredGame({ deck, names, onExit }: Props) {
     return (
       <main className="screen" data-screen="authored.write">
         <button className="backbtn" onClick={() => setRoute({ at: 'list' })} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="eyebrow">
           {names[route.by]}, privately &middot; {written} written
@@ -227,7 +228,7 @@ export default function AuthoredGame({ deck, names, onExit }: Props) {
       <main className="play" data-screen="authored.drawn">
         <header className="play__top">
           <button className="play__back" onClick={() => setRoute({ at: 'list' })} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{deck.title}</span>
         </header>
@@ -286,7 +287,7 @@ export default function AuthoredGame({ deck, names, onExit }: Props) {
     <main className="play" data-screen="authored.list">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
         <span className="play__tier">{open.length} left</span>

@@ -3,6 +3,7 @@ import type { Deck, Tier } from '../types';
 import { rulesFor } from '../lib/rules';
 import { ENGINE_COLOR, TIER_LABEL } from '../lib/engineMeta';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * Read every card in the app without playing anything.
@@ -126,7 +127,7 @@ export default function Inspect({ decks, onBack }: Props) {
     return (
       <main className="screen" data-screen={`inspect.${open.id}`}>
         <button className="backbtn" onClick={() => setOpenId(null)} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="eyebrow">
           {open.engine} &middot; tier {open.tierRange[0]}
@@ -273,7 +274,7 @@ export default function Inspect({ decks, onBack }: Props) {
   return (
     <main className="screen" data-screen="inspect">
       <button className="backbtn" onClick={onBack} aria-label="Back">
-        &larr;
+        <Icon name="back" size={20} />
       </button>
       <p className="h1 h1--big">Look through everything</p>
       <p className="lede">

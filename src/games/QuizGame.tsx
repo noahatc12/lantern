@@ -5,6 +5,7 @@ import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import Empty from '../components/Empty';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E13 Quiz. One of you answers as the other, then finds out.
@@ -125,7 +126,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
       <main className="play" data-screen={`quiz.seed.${phase.i}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[subject]}, privately</span>
           <span className="play__tier">
@@ -184,7 +185,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
       <main className="play" data-screen={`quiz.guess.${phase.i}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">
             {names[guesser]} answers for {names[subject]}
@@ -244,7 +245,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
       <main className="play" data-screen={`quiz.real.${phase.i}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[subject]}, your turn</span>
         </header>
@@ -302,7 +303,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
       <main className="play" data-screen={`quiz.reveal.${phase.i}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{r.card.text}</span>
         </header>
@@ -354,7 +355,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
       <main className="play" data-screen="quiz.scoreboard">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[subject]} marks them</span>
           <span className="play__tier">
@@ -418,7 +419,7 @@ export default function QuizGame({ deck, names, maxTier, availableProps, onExit 
     <main className="play" data-screen="quiz.over">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
       </header>

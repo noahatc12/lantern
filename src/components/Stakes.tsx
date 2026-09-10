@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { isVaultItems, read, write } from '../lib/storage';
 import type { VaultItem } from '../lib/storage';
+import Icon from './Icon';
 
 /**
  * E9 Stakes. Not a game: a thing you bolt onto one.
@@ -77,8 +78,8 @@ export default function Stakes({ names, kind, onKind }: Props) {
             {names[0]} {count[0]} &middot; {names[1]} {count[1]}
           </span>
         )}
-        <span className="stakes__chev" aria-hidden="true">
-          {open ? '∨' : '∧'}
+        <span className="stakes__chev">
+          <Icon name={open ? 'down' : 'up'} size={16} />
         </span>
       </button>
 

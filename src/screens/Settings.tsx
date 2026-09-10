@@ -4,6 +4,7 @@ import { TIER_LABEL } from '../lib/engineMeta';
 import { useScreenTop } from '../lib/useScreenTop';
 import type { Deck } from '../types';
 import Inspect from './Inspect';
+import Icon from '../components/Icon';
 
 /**
  * Settings and its four sub-screens, ported from the canvas.
@@ -54,7 +55,7 @@ export default function Settings(p: Props) {
     return (
       <main className="screen" data-screen="settings.names">
         <button className="backbtn" onClick={back} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1">Names</p>
         <div className="stack" style={{ marginBottom: 18 }}>
@@ -85,7 +86,7 @@ export default function Settings(p: Props) {
     return (
       <main className="screen" data-screen="settings.props">
         <button className="backbtn" onClick={back} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1" style={{ marginBottom: 8 }}>
           What you have to hand
@@ -124,7 +125,9 @@ export default function Settings(p: Props) {
                     <span className="prop__gates">
                       {gates} card{gates === 1 ? '' : 's'}
                     </span>
-                    <span className="prop__mark">{on ? '✓' : '+'}</span>
+                    <span className="prop__mark">
+                      <Icon name={on ? 'check' : 'plus'} size={17} />
+                    </span>
                   </button>
                 );
               })}
@@ -146,7 +149,7 @@ export default function Settings(p: Props) {
     return (
       <main className="screen" data-screen="settings.privacy">
         <button className="backbtn" onClick={back} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1">What this app can and cannot do</p>
         <div className="stack">
@@ -219,7 +222,7 @@ export default function Settings(p: Props) {
     <main className="screen" data-screen="settings">
       {p.onBack && (
         <button className="backbtn" onClick={p.onBack} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
       )}
       <p className="h1 h1--big">Settings</p>

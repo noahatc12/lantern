@@ -5,6 +5,7 @@ import Empty from '../components/Empty';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E2 Predict, authored variant. Two Truths and a Turn-On runs on this.
@@ -53,7 +54,7 @@ export default function PredictGame({ deck, names, maxTier, availableProps, onEx
 
   const back = (
     <button className="play__back" onClick={onExit} aria-label="Back">
-      &larr;
+      <Icon name="back" size={20} />
     </button>
   );
 

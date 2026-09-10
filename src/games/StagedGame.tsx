@@ -3,6 +3,7 @@ import type { Deck, Tier } from '../types';
 import { isStages, read, write } from '../lib/storage';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E16 Staged. Stages unlocked in order, one per sitting, over weeks.
@@ -102,7 +103,7 @@ export default function StagedGame({ deck, names, onExit }: Props) {
     return (
       <main className="screen" data-screen="staged.list">
         <button className="backbtn" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1 h1--big">{deck.title}</p>
 
@@ -165,7 +166,7 @@ export default function StagedGame({ deck, names, onExit }: Props) {
       <main className="play" data-screen={`staged.brief.${phase.n}`}>
         <header className="play__top">
           <button className="play__back" onClick={() => setPhase({ step: 'stages' })} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">Stage {phase.n + 1}</span>
           <span className="play__tier">{stage.minutes} min each</span>
@@ -202,7 +203,7 @@ export default function StagedGame({ deck, names, onExit }: Props) {
       <main className="play" data-screen={`staged.timer.${phase.n}.${phase.side}`}>
         <header className="play__top">
           <button className="play__back" onClick={() => setPhase({ step: 'stages' })} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">Stage {phase.n + 1}</span>
           <span className="play__tier">{first ? 'first half' : 'second half'}</span>
@@ -256,7 +257,7 @@ export default function StagedGame({ deck, names, onExit }: Props) {
     <main className="play" data-screen={`staged.debrief.${phase.n}`}>
       <header className="play__top">
         <button className="play__back" onClick={() => setPhase({ step: 'stages' })} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">Stage {phase.n + 1}, afterwards</span>
       </header>

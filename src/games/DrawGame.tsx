@@ -13,6 +13,7 @@ import {
 } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E1 Draw, with the ladder. Truth or Dare runs on this.
@@ -120,7 +121,7 @@ export default function DrawGame({ deck, names, maxTier, availableProps, onExit 
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
         <span className="play__tier">tier {currentTier(state)}</span>
@@ -166,10 +167,12 @@ export default function DrawGame({ deck, names, maxTier, availableProps, onExit 
           <p className="card">{card.text}</p>
           <div className="play__actions">
             <button className="btn btn--ghost" onClick={() => pull(kind)}>
+              <Icon name="reroll" size={17} />
               Skip
             </button>
             <button className="btn btn--primary" onClick={done}>
               Done, pass
+              <Icon name="forward" size={18} />
             </button>
           </div>
           <p className="play__note">

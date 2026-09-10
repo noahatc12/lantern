@@ -6,6 +6,7 @@ import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { isMatchResult, read, write } from '../lib/storage';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E4 Match-reveal. The centrepiece engine.
@@ -154,7 +155,7 @@ export default function MatchGame({ deck, names, maxTier, availableProps, onExit
             onClick={onExit}
             aria-label="Leave, discarding this sort"
           >
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[phase.who]}, alone</span>
           <span className="play__tier">
@@ -190,7 +191,7 @@ export default function MatchGame({ deck, names, maxTier, availableProps, onExit
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
       </header>

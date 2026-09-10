@@ -5,6 +5,7 @@ import Handoff from '../components/Handoff';
 import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E3 Compare. Both answer the same question privately, then both answers are
@@ -88,7 +89,7 @@ export default function CompareGame({ deck, names, maxTier, availableProps, onEx
       <main className="play">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[phase.who]}, privately</span>
           <span className="play__tier">
@@ -133,7 +134,7 @@ export default function CompareGame({ deck, names, maxTier, availableProps, onEx
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
         <span className="play__tier">

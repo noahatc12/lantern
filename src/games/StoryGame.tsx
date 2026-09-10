@@ -5,6 +5,7 @@ import Empty from '../components/Empty';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E17 Story. A direction, a forced opening, and then you talk.
@@ -101,7 +102,7 @@ export default function StoryGame({ deck, names, maxTier, availableProps, onExit
       <main className="play" data-screen={`story.prompt.${round}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[teller]} is telling this one</span>
         </header>
@@ -131,7 +132,7 @@ export default function StoryGame({ deck, names, maxTier, availableProps, onExit
       <main className="play" data-screen={`story.pick.${round}.${phase.who}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[phase.who]}, privately</span>
         </header>
@@ -187,7 +188,7 @@ export default function StoryGame({ deck, names, maxTier, availableProps, onExit
       <main className="play" data-screen={`story.choose.${round}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[teller]} chooses</span>
         </header>
@@ -217,7 +218,7 @@ export default function StoryGame({ deck, names, maxTier, availableProps, onExit
       <main className="play" data-screen={`story.telling.${round}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[teller]} is telling it</span>
         </header>
@@ -245,7 +246,7 @@ export default function StoryGame({ deck, names, maxTier, availableProps, onExit
     <main className="play" data-screen={`story.question.${round}`}>
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{names[other]} asks</span>
       </header>

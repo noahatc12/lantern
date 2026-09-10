@@ -4,6 +4,7 @@ import { playable } from '../lib/deck';
 import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E7 Ladder. The Ask runs on this.
@@ -57,7 +58,7 @@ export default function LadderGame({ deck, names, maxTier, availableProps, onExi
       <main className="play">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{deck.title}</span>
         </header>
@@ -98,7 +99,7 @@ export default function LadderGame({ deck, names, maxTier, availableProps, onExi
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
         <span className="play__tier">

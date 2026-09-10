@@ -5,6 +5,7 @@ import Handoff from '../components/Handoff';
 import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E5 Scale. Both rate the same thing 0 to 10, and the GAP is revealed before
@@ -82,7 +83,7 @@ export default function ScaleGame({ deck, names, maxTier, availableProps, onExit
       <main className="play">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[phase.who]}, privately</span>
           <span className="play__tier">
@@ -118,7 +119,7 @@ export default function ScaleGame({ deck, names, maxTier, availableProps, onExit
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
       </header>

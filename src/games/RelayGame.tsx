@@ -6,6 +6,7 @@ import type { Story } from '../lib/storage';
 import Empty from '../components/Empty';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E15 Relay. One sentence each, passing the phone.
@@ -110,7 +111,7 @@ export default function RelayGame({ deck, names, maxTier, availableProps, onExit
           onClick={() => setPhase({ step: 'rules' })}
           aria-label="Back"
         >
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1 h1--big">Kept</p>
         {saved.length === 0 && (
@@ -142,7 +143,7 @@ export default function RelayGame({ deck, names, maxTier, availableProps, onExit
       <main className="play" data-screen="relay.whole">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{written} sentences</span>
         </header>
@@ -191,7 +192,7 @@ export default function RelayGame({ deck, names, maxTier, availableProps, onExit
     <main className="play" data-screen={`relay.writing.${written}`}>
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{names[turn]}, one sentence</span>
         <span className="play__tier">{left} left</span>

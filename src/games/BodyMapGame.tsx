@@ -5,6 +5,7 @@ import type { BodyMaps } from '../lib/storage';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E18 Body map. The only game here whose output is a picture.
@@ -186,7 +187,7 @@ export default function BodyMapGame({ deck, names, onExit }: Props) {
       <main className="play" data-screen={`bodymap.paint.${phase.who}`}>
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{names[phase.who]}, privately</span>
           <span className="play__tier">
@@ -303,7 +304,7 @@ export default function BodyMapGame({ deck, names, onExit }: Props) {
     <main className="play" data-screen="bodymap.reveal">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
       </header>

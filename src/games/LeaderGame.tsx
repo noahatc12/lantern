@@ -4,6 +4,7 @@ import { playable, shuffle, mulberry32 } from '../lib/deck';
 import Handoff from '../components/Handoff';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E12 Leader. One person holds the role for a whole round.
@@ -142,7 +143,7 @@ export default function LeaderGame({ deck, names, maxTier, availableProps, onExi
     <main className="play" data-screen={`leader.play.${i}`}>
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
         <span className="play__tier">

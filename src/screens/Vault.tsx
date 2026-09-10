@@ -4,6 +4,7 @@ import { isMatchResult, isVaultItems, keys, read, remove, write } from '../lib/s
 import type { MatchResult, VaultItem } from '../lib/storage';
 import { byDeck, minutes, readHistory, whenLabel } from '../lib/history';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * The vault: everything the two of you have accumulated, in three parts.
@@ -146,7 +147,7 @@ export default function Vault({ decks, names, onPick, onExit }: Props) {
     return (
       <main className="screen" data-screen="vault.new">
         <button className="backbtn" onClick={() => setRoute('list')} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1">Who owes what?</p>
 
@@ -226,7 +227,7 @@ export default function Vault({ decks, names, onPick, onExit }: Props) {
     return (
       <main className="screen" data-screen="vault.result">
         <button className="backbtn" onClick={() => setRoute('list')} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <p className="h1">{open.title}</p>
         <p className="lede">
@@ -277,7 +278,7 @@ export default function Vault({ decks, names, onPick, onExit }: Props) {
     <main className="screen" data-screen={`vault.${section}`}>
       {onExit && (
         <button className="backbtn" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
       )}
 
@@ -287,6 +288,7 @@ export default function Vault({ decks, names, onPick, onExit }: Props) {
         </p>
         {section === 'owed' && (
           <button className="btn--accent-ghost btn--pill" onClick={() => setRoute('new')}>
+            <Icon name="plus" size={16} />
             Write one
           </button>
         )}
@@ -393,6 +395,7 @@ function Owed({
                       )
                     }
                   >
+                    <Icon name="check" size={16} />
                     Redeem
                   </button>
                 )}
@@ -404,6 +407,7 @@ function Owed({
                   className="iou__delete"
                   onClick={() => onPersist(items.filter((x) => x.id !== it.id))}
                 >
+                  <Icon name="trash" size={15} weight={1.7} />
                   Delete
                 </button>
               </div>

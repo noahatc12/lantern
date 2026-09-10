@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Deck } from '../types';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E6 Timer. The Long Kiss runs on this.
@@ -75,7 +76,7 @@ export default function TimerGame({ deck, onExit }: Props) {
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
       </header>

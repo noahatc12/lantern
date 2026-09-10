@@ -1684,3 +1684,129 @@
   line-height: 1.35;
   color: var(--ink);
 }
+
+/* ---------- icons and the buttons they sit in ---------- */
+
+/* One family, one weight, never squashed by a flex parent. */
+.icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Every button lays its content out the same way, so an icon beside a label is
+   optically centred rather than sitting on the text baseline. Buttons centred
+   their text by default before this, which worked until any of them contained
+   two things. */
+/* .prop and .row2 are left out: both already lay themselves out and both use a
+   wider gap on purpose, and pulling them in here quietly narrowed it. */
+.btn,
+.btn--pill,
+.btn--redeem,
+.iou__delete,
+.rolled__reroll,
+.filter,
+.level,
+.lineopt,
+.seg__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.lineopt {
+  justify-content: flex-start;
+}
+
+/* The back control was a text arrow on nothing at all: no shape, no edge, no
+   pressed state. It is the most tapped thing in the app and it looked like a
+   typo. Now it is a real target with a real edge. */
+.play__back,
+.backbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  background: var(--panel-2);
+  box-shadow: var(--lift-1);
+  color: var(--ink-mid);
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.play__back:active,
+.backbtn:active {
+  transform: scale(0.94);
+  border-color: var(--line-loud);
+  color: var(--ink);
+}
+
+/* Outlined controls were bordered in a colour four steps from the background,
+   which reads as a smudge rather than an edge. */
+.btn--ghost,
+.filter,
+.level,
+.lineopt,
+.prop,
+.floor__btn {
+  border-color: var(--line-strong);
+}
+
+.btn--ghost {
+  color: var(--ink-mid);
+}
+
+.filter:active,
+.level:active,
+.lineopt:active,
+.prop:active {
+  border-color: var(--line-loud);
+}
+
+/* Icon-and-label pairs that had no gap because they used to be label only. */
+.btn--pill,
+.btn--redeem {
+  gap: 8px;
+}
+
+.iou__delete,
+.rolled__reroll {
+  gap: 6px;
+}
+
+.stakes__chev {
+  display: inline-flex;
+  align-items: center;
+}
+
+.prop__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+}
+
+/* A search field with nothing in it looks like a disabled input. */
+.search {
+  position: relative;
+}
+
+.search__icon {
+  position: absolute;
+  left: 17px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--ink-dim);
+  pointer-events: none;
+}
+
+.search__icon ~ .search__input {
+  padding-left: 44px;
+}

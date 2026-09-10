@@ -5,6 +5,7 @@ import { excludedParts, ruledOut } from '../lib/bodyMap';
 import { REGIONS } from './BodyMapGame';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E8 Builder. Assembles a prompt from independent slot pools.
@@ -107,7 +108,7 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
       <main className="play">
         <header className="play__top">
           <button className="play__back" onClick={onExit} aria-label="Back">
-            &larr;
+            <Icon name="back" size={20} />
           </button>
           <span className="play__deck">{deck.title}</span>
         </header>
@@ -122,7 +123,7 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
       </header>
@@ -140,6 +141,7 @@ export default function BuilderGame({ deck, maxTier, availableProps, onExit }: P
                 }
                 aria-label={`Reroll ${d.label}`}
               >
+                <Icon name="reroll" size={15} weight={1.8} />
                 reroll
               </button>
             </div>

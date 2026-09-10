@@ -1,4 +1,5 @@
 import type { Tier } from '../types';
+import Icon from './Icon';
 
 /**
  * The floor: Ease off and Stop, on every play screen.
@@ -32,36 +33,18 @@ export default function FloorBar({ tier, onBack, onEase, onStop }: Props) {
           eye looks for it; this one is where the thumb already is, which on a
           6.1 inch phone is not the same place. */}
       <button type="button" className="floor__btn floor__back" onClick={onBack}>
-        <svg width="9" height="15" viewBox="0 0 10 17" fill="none" aria-hidden="true">
-          <path
-            d="M8 1L1.5 8.5 8 16"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="back" size={17} />
         Back
       </button>
       <span className="floor__gap" />
       {tier > 1 && (
         <button type="button" className="floor__btn floor__btn--ease" onClick={onEase}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="6.1" stroke="currentColor" strokeWidth="1.4" />
-            <path d="M7 .9a6.1 6.1 0 000 12.2z" fill="currentColor" />
-          </svg>
+          <Icon name="ease" size={17} />
           Ease off
         </button>
       )}
       <button type="button" className="floor__btn floor__btn--stop" onClick={onStop}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path
-            d="M4.9 1h4.2L13 4.9v4.2L9.1 13H4.9L1 9.1V4.9z"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon name="stop" size={17} />
         Stop
       </button>
     </div>

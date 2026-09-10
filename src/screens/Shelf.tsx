@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Deck, Tier } from '../types';
 import { BANDS, ENGINE_COLOR, bandFor } from '../lib/engineMeta';
+import Icon from '../components/Icon';
 
 /**
  * Browsing, ported from the canvas.
@@ -67,12 +68,15 @@ export default function Shelf({ decks, maxTier, onPick, onBack, onTier }: Props)
     <main className="screen" data-screen="shelf">
       {onBack && (
         <button className="backbtn" onClick={onBack} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
       )}
       <p className="h1 h1--big">The shelf</p>
 
       <div className="search">
+        <span className="search__icon">
+          <Icon name="search" size={17} weight={1.8} />
+        </span>
         <input
           className="search__input"
           value={query}

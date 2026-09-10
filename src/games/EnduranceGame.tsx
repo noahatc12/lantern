@@ -3,6 +3,7 @@ import type { Deck, Tier } from '../types';
 import { playable } from '../lib/deck';
 import Rules from '../components/Rules';
 import { useScreenTop } from '../lib/useScreenTop';
+import Icon from '../components/Icon';
 
 /**
  * E11 Endurance. Two people, one loses by reacting.
@@ -111,7 +112,7 @@ export default function EnduranceGame({ deck, names, maxTier, availableProps, on
     <main className="play">
       <header className="play__top">
         <button className="play__back" onClick={onExit} aria-label="Back">
-          &larr;
+          <Icon name="back" size={20} />
         </button>
         <span className="play__deck">{deck.title}</span>
         <span className="play__tier">{Math.floor(total / 60)}m elapsed</span>

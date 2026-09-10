@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Deck } from '../types';
 import { rulesFor } from '../lib/rules';
 import { useNoteStart } from '../lib/started';
+import Icon from './Icon';
 
 /**
  * The how-to-play screen every game opens on, restyled to the canvas.
@@ -33,7 +34,7 @@ export default function Rules({ deck, onStart, onExit, children, startLabel }: P
   return (
     <main className="play play--rules" data-screen={`rules.${deck.id}`}>
       <button className="play__back play__back--solo" onClick={onExit} aria-label="Back">
-        &larr;
+        <Icon name="back" size={20} />
       </button>
 
       <section className="rules">
