@@ -18,12 +18,34 @@
  * from, using env() where it reports something usable and a measured constant
  * where it does not.
  *
+ * The top inset was left at whatever env() said until 2026-09-10, when Noah
+ * reported the navigation buttons being hard to reach on an iPhone 14 because
+ * of the notch. Same failure as the bottom, one edge over, and it hid for
+ * longer because nothing up there gets visibly struck through.
+ *
  * Re-check when iOS changes. If a future version reports correctly, the shim
  * becomes a no-op on its own, because env() would then exceed the floor.
  */
 
 const IOS_HOME_INDICATOR_PX = 34;
 const DEFAULT_FLOOR_PX = 16;
+
+/**
+ * The top has the same problem as the bottom, and it went unnoticed for longer
+ * because nothing is visibly struck through up there. env() reports 0 on this
+ * device while the notch and the status bar still occupy the strip, so any
+ * screen that trusted --safe-top put its back button under them.
+ *
+ * 47 is the notched iPhone status-bar inset in portrait. A Dynamic Island phone
+ * wants 59, and the two cannot be told apart from JavaScript with any
+ * reliability, so this errs 12px low there rather than costing every other
+ * device 12px of screen. Same trade the bottom makes, in the same direction:
+ * cheap when wrong, and the layout adds its own margin on top.
+ */
+const IOS_NOTCH_PX = 47;
+
+/** Enough that a control is never flush against the top edge on anything. */
+const TOP_FLOOR_PX = 12;
 
 function envPx(side: 'top' | 'bottom'): number {
   const probe = document.createElement('div');
@@ -74,11 +96,18 @@ export function installSafeAreaVars(): SafeAreaResult {
   const bottom = needsShim
     ? IOS_HOME_INDICATOR_PX
     : Math.max(envBottom, DEFAULT_FLOOR_PX);
-  const top = Math.max(envTop, 0);
+
+  const topShimmed = envTop === 0 && hasHomeIndicator();
+  const top = topShimmed ? IOS_NOTCH_PX : Math.max(envTop, TOP_FLOOR_PX);
 
   const root = document.documentElement;
   root.style.setProperty('--safe-bottom', `${bottom}px`);
   root.style.setProperty('--safe-top', `${top}px`);
 
-  return { top, bottom, shimmed: needsShim, standalone: isStandalone() };
+  return {
+    top,
+    bottom,
+    shimmed: needsShim || topShimmed,
+    standalone: isStandalone(),
+  };
 }

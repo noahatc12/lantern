@@ -297,6 +297,33 @@ async function main() {
   await page.waitForSelector('.card');
   check('stop is present while a card is up', (await page.locator('.floor__btn--stop').count()) === 1);
   check('ease off is present alongside it', (await page.locator('.floor__btn--ease').count()) === 1);
+
+  // Reach, not just presence. The top-left chevron is the hardest place on a
+  // 6.1 inch phone to get a thumb to, so leaving has to be possible from the
+  // bottom of the screen as well.
+  const backBtn = page.locator('.floor__back');
+  check('there is a way back within thumb reach', (await backBtn.count()) === 1);
+  const lowEnough = await backBtn.evaluate(
+    (el) => el.getBoundingClientRect().top > window.innerHeight * 0.7,
+  );
+  check('and it really is at the bottom of the screen', lowEnough);
+
+  // Nothing may sit under the notch. env() reports zero inset on this hardware
+  // and the shim supplies a real one; if that ever regresses, the top control
+  // goes back under the status bar and this is what says so.
+  const topInset = await page.evaluate(() => {
+    const cs = getComputedStyle(document.documentElement);
+    const el = document.querySelector('.play__back');
+    return {
+      safeTop: parseFloat(cs.getPropertyValue('--safe-top')) || 0,
+      controlTop: el ? Math.round(el.getBoundingClientRect().top) : -1,
+    };
+  });
+  check(
+    'the top control clears the notch',
+    topInset.controlTop >= topInset.safeTop,
+    `control at ${topInset.controlTop}px, inset ${topInset.safeTop}px`,
+  );
   await snap(page, 'tod-stopcontrols');
 
   // Ease off must actually lower the ceiling, not just say so. Read it off
@@ -1131,6 +1158,62 @@ async function main() {
   check('privacy states that a No is never recorded', /never a No/i.test(privacy));
   await snap(page, 'settings-privacy');
   await page.locator('.backbtn').click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+
+  // ---------- look through everything ----------
+  // Reading the decks must not look like playing them, or the played list stops
+  // meaning anything.
+  const playedBefore = await (async () => {
+    await tabs.nth(2).click();
+    await page.waitForSelector('.seg', { timeout: 10000 });
+    await page.locator('.seg__btn', { hasText: 'Played' }).click();
+    await page.waitForSelector('.stats, .emptybox', { timeout: 10000 });
+    const n = await page.locator('.rows--gap .row2--card').count();
+    await tabs.nth(3).click();
+    await page.waitForSelector('.rows', { timeout: 10000 });
+    return n;
+  })();
+
+  await page.locator('.row2', { hasText: 'Look through everything' }).click();
+  await page.waitForSelector('.rows--gap', { timeout: 10000 });
+  const listed = await page.locator('.row2--card').count();
+  check('every game is listed for reading', listed >= 42, `${listed} listed`);
+  await snap(page, 'inspect-list');
+
+  await page.locator('.search__input').fill('kiss');
+  await page.waitForTimeout(200);
+  const foundLines = await page.locator('.yes').count();
+  check('search reaches inside every deck', foundLines > 0, `${foundLines} lines`);
+  await page.locator('.search__input').fill('');
+  await page.waitForTimeout(150);
+
+  await page.locator('.row2--card').first().click();
+  await page.waitForSelector('.inspect__summary', { timeout: 10000 });
+  const cardLines = await page.locator('.yes').count();
+  check('a deck shows its actual cards', cardLines > 5, `${cardLines} lines`);
+  const tierHeads = await page.locator('.eyebrow').allInnerTexts();
+  check(
+    'and says which tier each group is',
+    tierHeads.some((t) => /tier \d/i.test(t)),
+    tierHeads.slice(0, 4).join(' | '),
+  );
+  await snap(page, 'inspect-deck');
+  await page.locator('.backbtn').click();
+  await page.waitForSelector('.rows--gap', { timeout: 10000 });
+  await page.locator('.backbtn').click();
+  await page.waitForSelector('.rows', { timeout: 10000 });
+
+  await tabs.nth(2).click();
+  await page.waitForSelector('.seg', { timeout: 10000 });
+  await page.locator('.seg__btn', { hasText: 'Played' }).click();
+  await page.waitForSelector('.stats, .emptybox', { timeout: 10000 });
+  const playedAfter = await page.locator('.rows--gap .row2--card').count();
+  check(
+    'reading is not playing',
+    playedAfter === playedBefore,
+    `${playedBefore} -> ${playedAfter}`,
+  );
+  await tabs.nth(3).click();
   await page.waitForSelector('.rows', { timeout: 10000 });
 
   await page.locator('.card--danger').click();

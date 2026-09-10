@@ -6,7 +6,9 @@
 .screen {
   min-height: 100dvh;
   box-sizing: border-box;
-  padding: calc(var(--safe-top) + 58px) 20px calc(var(--safe-bottom) + 24px);
+  /* 14 rather than the canvas's 58: that 58 was standing in for a notch inset
+     that --safe-top now supplies for real, and keeping both double-counted it. */
+  padding: calc(var(--safe-top) + 14px) 20px calc(var(--safe-bottom) + 24px);
   max-width: 620px;
   margin: 0 auto;
   animation: screenIn var(--t-mid) var(--ease) both;
@@ -61,7 +63,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  padding: calc(var(--safe-top) + 58px) 26px calc(var(--safe-bottom) + 28px);
+  padding: calc(var(--safe-top) + 24px) 26px calc(var(--safe-bottom) + 28px);
   max-width: 620px;
   margin: 0 auto;
   animation: screenIn var(--t-slow) var(--ease) both;
@@ -879,16 +881,16 @@
   background: var(--panel-deep);
 }
 
-.floor__label {
+.floor__gap {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ink-dim);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+}
+
+/* Quieter than the two safety controls beside it. Leaving is ordinary; the
+   other two are not, and the bar should not read as three equal choices. */
+.floor__back {
+  border-color: var(--line);
+  color: var(--ink-quiet);
 }
 
 .floor__btn {
@@ -1671,4 +1673,14 @@
 
 .gate .mark--lit {
   margin-bottom: 14px;
+}
+
+/* ---------- look through everything ---------- */
+
+.inspect__summary {
+  margin: 0 0 18px;
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--ink);
 }

@@ -5,7 +5,7 @@ import type { Bundle } from './lib/content';
 import { propsUsed } from './lib/deck';
 import { record } from './lib/history';
 import { StartedContext } from './lib/started';
-import { TIER_LABEL } from './lib/engineMeta';
+import { useEdgeBack } from './lib/useEdgeBack';
 import {
   isBool,
   isNames,
@@ -218,6 +218,13 @@ function AppBody() {
     document.scrollingElement?.scrollTo(0, 0);
   }, [routeKey]);
 
+  /**
+   * Swiping in from the left edge leaves whatever you are in. Declared here
+   * rather than per screen so there is one implementation and no screen can
+   * quietly not have it.
+   */
+  useEdgeBack(route.at === 'game' ? leaveGame : undefined);
+
   const decks = bundle?.decks ?? [];
 
   /**
@@ -345,8 +352,8 @@ function AppBody() {
     const canStake = ['draw', 'leader', 'quiz', 'timer', 'endurance'].includes(deck.engine);
     const floor = (
       <FloorBar
-        label={`ceiling ${maxTier}, ${TIER_LABEL[maxTier]}`}
         tier={maxTier}
+        onBack={leaveGame}
         onEase={easeOff}
         onStop={() => setStopped(true)}
       />
@@ -444,7 +451,7 @@ function AppBody() {
           defaultTier={defaultTier}
           availableProps={availableProps}
           knownProps={knownProps}
-          deckCount={decks.length}
+          decks={decks}
           onNames={(n) => {
             setNames(n);
             write('names', n);

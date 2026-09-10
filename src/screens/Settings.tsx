@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Tier } from '../types';
 import { TIER_LABEL } from '../lib/engineMeta';
 import { useScreenTop } from '../lib/useScreenTop';
+import type { Deck } from '../types';
+import Inspect from './Inspect';
 
 /**
  * Settings and its four sub-screens, ported from the canvas.
@@ -15,7 +17,7 @@ import { useScreenTop } from '../lib/useScreenTop';
  * of things that item unlocks.
  */
 
-type Sub = 'root' | 'names' | 'props' | 'privacy' | 'reset';
+type Sub = 'root' | 'names' | 'props' | 'privacy' | 'reset' | 'inspect';
 
 interface Props {
   names: [string, string];
@@ -23,7 +25,7 @@ interface Props {
   availableProps: string[];
   /** Every prop the content actually asks for, with how much it gates. */
   knownProps: { name: string; gates: number }[];
-  deckCount: number;
+  decks: Deck[];
   onNames: (n: [string, string]) => void;
   onDefaultTier: (t: Tier) => void;
   onProps: (p: string[]) => void;
@@ -43,6 +45,10 @@ export default function Settings(p: Props) {
   // Each sub-screen is a screen. Opening Privacy from a scrolled settings list
   // must start at the top of Privacy, not wherever the finger happened to be.
   useScreenTop(sub);
+
+  if (sub === 'inspect') {
+    return <Inspect decks={p.decks} onBack={back} />;
+  }
 
   if (sub === 'names') {
     return (
@@ -166,6 +172,14 @@ export default function Settings(p: Props) {
             </p>
           </div>
           <div className="fact">
+            <p className="fact__label fact__label--ok">works with no signal</p>
+            <p className="fact__text">
+              The whole app and the sealed bundle are kept on the phone after the first
+              visit, so it opens and plays with the network off entirely. It only reaches
+              out to notice that a newer version exists.
+            </p>
+          </div>
+          <div className="fact">
             <p className="fact__label fact__label--warn">what is written down</p>
             <p className="fact__text">
               Your names, the ceiling, the vault, which cards you have seen, and match
@@ -262,9 +276,13 @@ export default function Settings(p: Props) {
 
       <p className="eyebrow">content</p>
       <div className="rows">
+        <button className="row2" onClick={() => setSub('inspect')}>
+          <span className="row2__label">Look through everything</span>
+          <span className="row2__value">{p.decks.length} games</span>
+        </button>
         <div className="row2">
           <span className="row2__label">Bundle</span>
-          <span className="row2__value">sealed &middot; {p.deckCount} games</span>
+          <span className="row2__value">sealed &middot; {p.decks.length} games</span>
         </div>
         <button className="row2" onClick={p.onForgetSeen}>
           <span className="row2__label">Seen-card memory</span>

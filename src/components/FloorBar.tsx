@@ -13,20 +13,37 @@ import type { Tier } from '../types';
  * Neither control is attributed or counted. That is not a UI preference: if
  * using one cost anything socially, people would stop using them and the layer
  * would be decorative.
+ *
+ * It also carries Back, because a play screen's only other way out was a chevron
+ * in the top-left corner, which is the hardest place on the phone to reach.
  */
 
 interface Props {
-  /** Left-hand context, e.g. how far through the deck you are. */
-  label: string;
   tier: Tier;
+  onBack: () => void;
   onEase: () => void;
   onStop: () => void;
 }
 
-export default function FloorBar({ label, tier, onEase, onStop }: Props) {
+export default function FloorBar({ tier, onBack, onEase, onStop }: Props) {
   return (
     <div className="floor" role="group" aria-label="Session controls">
-      <span className="floor__label">{label}</span>
+      {/* Back lives down here as well as at the top. The top one is where the
+          eye looks for it; this one is where the thumb already is, which on a
+          6.1 inch phone is not the same place. */}
+      <button type="button" className="floor__btn floor__back" onClick={onBack}>
+        <svg width="9" height="15" viewBox="0 0 10 17" fill="none" aria-hidden="true">
+          <path
+            d="M8 1L1.5 8.5 8 16"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Back
+      </button>
+      <span className="floor__gap" />
       {tier > 1 && (
         <button type="button" className="floor__btn floor__btn--ease" onClick={onEase}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">

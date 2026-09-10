@@ -438,7 +438,7 @@ input {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 84px);
+  padding: calc(var(--safe-top) + 14px) 16px calc(var(--safe-bottom) + 84px);
   max-width: 620px;
   margin: 0 auto;
 }

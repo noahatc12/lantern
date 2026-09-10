@@ -1,6 +1,8 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { defineConfig } from 'vite';
+// @ts-expect-error plain JS build helper, no types needed
+import { writeServiceWorker } from './scripts/sw.mjs';
 import react from '@vitejs/plugin-react';
 
 /**
@@ -29,6 +31,11 @@ export default defineConfig({
           JSON.stringify({ id: BUILD_ID }),
           'utf8',
         );
+        // After version.json, because the worker reads the build id from it.
+        // Generated here rather than by a separate command so a service worker
+        // built from a different dist/ than the one being served cannot exist.
+        const sw = writeServiceWorker();
+        this.info?.(`service worker: ${sw.files} files precached`);
       },
     },
   ],

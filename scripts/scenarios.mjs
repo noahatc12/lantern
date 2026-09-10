@@ -274,6 +274,88 @@ async function main() {
     { expectUnlocked: false },
   );
 
+  // ---- 7. No signal at all --------------------------------------------------
+  // The one place two people are most likely to want this is exactly where the
+  // wifi is worst. Claiming offline support without loading the app offline is
+  // how you find out on the night that it never worked.
+  console.log('\nscenario: opened with no signal');
+  {
+    const ctx = await browser.newContext({
+      ...devices['iPhone 13'],
+      viewport: { width: 390, height: 844 },
+    });
+    const errors = [];
+    const page = await ctx.newPage();
+    page.on('pageerror', (e) => errors.push(String(e)));
+
+    await page.goto(BASE, { waitUntil: 'networkidle' });
+
+    // The worker has to be in charge before going offline, or the reload is
+    // just testing the browser's own HTTP cache.
+    const controlled = await page
+      .waitForFunction(() => Boolean(navigator.serviceWorker?.controller), null, {
+        timeout: 20000,
+      })
+      .then(() => true)
+      .catch(() => false);
+    check('offline', 'a service worker takes control', controlled);
+
+    await page.waitForSelector('.gate__input', { timeout: 20000 });
+    await page.fill('.gate__input', PASS);
+    await page.click('button[type="submit"]');
+    await page.waitForSelector('.ob, .tabbar', { timeout: 40000 });
+
+    if ((await page.locator('.ob').count()) > 0) {
+      const inputs = page.locator('.ob .field');
+      await inputs.nth(0).fill('Noah');
+      await inputs.nth(1).fill('Lily');
+      await page.locator('.ob__foot .btn--primary').click();
+      await page.waitForSelector('.ob .tiers__row', { timeout: 10000 });
+      await page.locator('.ob .tier').nth(4).click();
+      await page.locator('.ob__foot .btn--primary').click();
+      await page.waitForSelector('.ctrl--stop', { timeout: 10000 });
+      await page.locator('.ob__foot .btn--primary').click();
+    }
+    await page.waitForSelector('.tabbar', { timeout: 20000 });
+
+    await ctx.setOffline(true);
+    await page.reload({ waitUntil: 'load' });
+
+    const booted = await page
+      .waitForSelector('.tabbar', { timeout: 20000 })
+      .then(() => true)
+      .catch(() => false);
+    check('offline', 'the app still opens with the network gone', booted);
+
+    if (booted) {
+      // The sealed bundle is the part that would silently be missing: the shell
+      // can come back from cache and still have no games in it.
+      await page.locator('.tabbtn').nth(1).click();
+      const gotDecks = await page
+        .waitForSelector('.decks', { timeout: 15000 })
+        .then(() => true)
+        .catch(() => false);
+      check('offline', 'the sealed content is there too', gotDecks);
+      const count = gotDecks ? await page.locator('.deckcard').count() : 0;
+      check('offline', 'the whole shelf is there, not a fragment', count >= 20, `${count} decks`);
+
+      await page.locator('.deckcard__title').first().click();
+      const opened = await page
+        .waitForSelector('.rules', { timeout: 15000 })
+        .then(() => true)
+        .catch(() => false);
+      check('offline', 'a game opens with no network', opened);
+    }
+
+    // A failed update check must never look like an available update.
+    const banner = await page.locator('.updatebar').count();
+    check('offline', 'no update banner from a failed check', banner === 0);
+    check('offline', 'no errors', errors.length === 0, errors.join('|'));
+
+    await ctx.setOffline(false);
+    await ctx.close();
+  }
+
   await browser.close();
 
   const failed = results.filter((r) => !r.ok);
